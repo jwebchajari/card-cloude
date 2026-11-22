@@ -1,9 +1,9 @@
-import HorariosForm from "@/components/dashboard/HorariosForm";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Horarios" };
-// El panel espera la sesión en el navegador: Next no puede prerenderizar esta página para validarla.
+// Los horarios ahora viven dentro de Datos del local; se conserva la dirección anterior.
 export const instant = false;
 
-export default function HorariosPage() {
-  return <HorariosForm />;
+export default async function HorariosPage({ params }) {
+  const { local } = await params;
+  redirect(`/panel/${local}/datos#horarios`);
 }

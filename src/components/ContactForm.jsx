@@ -29,7 +29,7 @@ export default function ContactForm({ whatsapp, email }) {
 
   return (
     <form className={s.contactForm} noValidate onSubmit={(e) => { e.preventDefault(); send(whatsapp ? "whatsapp" : "email"); }}>
-      <img src="/logo-mark.webp" alt="" width={60} height={64} />
+      <img src="/brand/mark-color.svg" alt="" width={70} height={56} />
       <h3>Contanos de tu local</h3>
       <label className="field">Nombre del local<input className="input" value={f.local} maxLength={80} autoComplete="organization" aria-invalid={error ? "true" : undefined} onChange={set("local")} /></label>
       <div className={s.formCols}>

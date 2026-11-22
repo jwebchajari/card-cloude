@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { CalendarClock, ExternalLink, LayoutGrid, LogOut, Package, Plus, QrCode, Shield, Store } from "lucide-react";
+import { ExternalLink, LayoutGrid, LogOut, Package, Plus, QrCode, Shield, Store } from "lucide-react";
 import Loading from "@/components/Loading";
 import { getFicha } from "@/lib/admin-data";
 import { canEdit, logout, profileLocales, useSession } from "@/lib/session";
@@ -75,8 +75,7 @@ export default function DashboardShell({ children }) {
   const nav = [
     { href: base, label: "Productos", icon: Package, exact: true },
     { href: `${base}/agregar`, label: "Agregar", icon: Plus },
-    { href: `${base}/datos`, label: "Datos", icon: Store },
-    { href: `${base}/horarios`, label: "Horarios", icon: CalendarClock },
+    { href: `${base}/datos`, label: "Datos del local", icon: Store },
     { href: `${base}/qr`, label: "QR", icon: QrCode },
   ];
   const isActive = (i) => (i.exact ? pathname === i.href || pathname.startsWith(`${base}/editar`) : pathname.startsWith(i.href));

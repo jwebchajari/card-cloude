@@ -74,7 +74,7 @@ export default async function LocalPage({ params }) {
               width={960}
               height={720}
               fetchPriority="high"
-              fallback={<img className={s.coverMark} src="/logo-mark.webp" alt="" width={240} height={256} />}
+              fallback={<img className={s.coverMark} src="/brand/mark-white.svg" alt="" width={250} height={200} />}
             />
           </div>
           <div className={s.localIntro}>

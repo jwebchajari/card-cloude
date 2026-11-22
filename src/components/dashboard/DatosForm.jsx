@@ -47,7 +47,6 @@ export default function DatosForm() {
 
   return (
     <form className={s.stack} onSubmit={submit} noValidate>
-      <h1 className={s.h1}>Datos del local</h1>
 
       <fieldset className={s.card}>
         <legend className={s.legend}>General</legend>

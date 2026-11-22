@@ -10,7 +10,7 @@ export default function SiteFooter() {
   return (
     <footer className={s.footer}>
       <div className={s.footerBrand}>
-        <Brand />
+        <Brand tone="white" />
         <p>Menú digital y catálogo online para comercios locales, con los pedidos directo a WhatsApp.</p>
       </div>
       <nav aria-label="Soluciones">
