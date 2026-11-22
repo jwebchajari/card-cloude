@@ -2,7 +2,7 @@ import Link from "next/link";
 import Brand from "@/components/Brand";
 import s from "@/app/landing.module.css";
 
-export default function SiteHeader() {
+export default function SiteHeader({ showLogin = true }) {
   return (
     <header className={s.header}>
       <Brand />
@@ -12,9 +12,11 @@ export default function SiteHeader() {
         <Link href="/locales">Locales</Link>
         <Link href="/#contacto">Contacto</Link>
       </nav>
-      <Link href="/login" className="btn">
-        Ingresar
-      </Link>
+      {showLogin ? (
+        <Link href="/login" className="btn">
+          Ingresar
+        </Link>
+      ) : null}
     </header>
   );
 }

@@ -266,6 +266,19 @@ export async function saveUsuario(uid, { nombre, email, superadmin, locales }) {
   });
 }
 
+/** Cambia el email de ingreso. El servidor comprueba que quien lo pide sea root. */
+export async function changeUsuarioEmail(uid, email) {
+  const token = await idToken();
+  const res = await fetch("/api/panel/usuarios/email", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token || ""}` },
+    body: JSON.stringify({ uid, email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) throw Object.assign(new Error(data.code || "admin/failed"), { code: data.code || "admin/failed" });
+  return data.email;
+}
+
 /** Usa una segunda instancia de Auth para no cerrar la sesión del superadmin. */
 export async function createUsuario({ email, password, nombre, locales = [], sendReset = false }) {
   const secondary = initializeApp(firebaseConfig, `alta-${Date.now()}`);

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown, Plus, Search, X } from "lucide-react";
-import { createUsuario, saveUsuario } from "@/lib/admin-data";
+import { changeUsuarioEmail, createUsuario, saveUsuario } from "@/lib/admin-data";
 import { authError } from "@/lib/session";
 import LocalChecks from "./LocalChecks";
 import s from "./panel.module.css";
@@ -54,16 +54,23 @@ function NewUser({ locales, onDone }) {
 function UserRow({ user, locales, names, isSelf, open, hidden, onToggle, onSaved }) {
   const [u, setU] = useState(user);
   const [state, setState] = useState("");
-  const dirty = !sameLocales(u.locales, user.locales);
+  const newEmail = u.email.trim();
+  const emailChanged = newEmail !== user.email;
+  const dirty = u.nombre.trim() !== user.nombre || emailChanged || !sameLocales(u.locales, user.locales);
   const bodyId = `usuario-${user.uid}`;
   const title = user.nombre || user.email || user.uid;
   const linked = user.locales.map((slug) => names[slug] || slug).join(", ") || "Sin locales";
   const meta = [user.nombre ? user.email : "", linked].filter(Boolean).join(" · ");
 
   async function save() {
+    if (!newEmail) {
+      setState("Escribí el email de ingreso.");
+      return;
+    }
     setState("saving");
     try {
-      await saveUsuario(u.uid, u);
+      if (emailChanged) await changeUsuarioEmail(u.uid, newEmail);
+      await saveUsuario(u.uid, { ...u, email: newEmail });
       setState("");
       onSaved();
     } catch (err) {
@@ -87,6 +94,9 @@ function UserRow({ user, locales, names, isSelf, open, hidden, onToggle, onSaved
 
       {open ? (
         <div id={bodyId} className={s.localBody}>
+          <label className="field">Nombre<input className="input" value={u.nombre} maxLength={80} onChange={(e) => setU({ ...u, nombre: e.target.value })} /></label>
+          <label className="field">Email de ingreso<input className="input" type="email" autoCapitalize="none" autoComplete="off" value={u.email} maxLength={120} onChange={(e) => setU({ ...u, email: e.target.value })} /></label>
+          {emailChanged ? <p className="hint">Al guardar, esta persona va a entrar con el email nuevo y la misma contraseña.</p> : null}
           <LocalChecks locales={locales} value={u.locales} onChange={(v) => setU({ ...u, locales: v })} />
           {state && state !== "saving" ? <p className="error-text" role="alert">{state}</p> : null}
           <div className={s.actions}>
@@ -138,7 +148,7 @@ export default function UsuariosPane({ usuarios, locales, selfUid, onChange }) {
       <ul className={s.localList}>
         {usuarios.map((u) => (
           <UserRow
-            key={`${u.uid}-${u.locales.join()}-${u.superadmin}`}
+            key={`${u.uid}-${u.nombre}-${u.email}-${u.locales.join()}-${u.superadmin}`}
             user={u}
             locales={locales}
             names={names}

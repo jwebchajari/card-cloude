@@ -16,6 +16,8 @@ const ERRORS = {
   "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase (Auth > Authorized domains).",
   "auth/operation-not-allowed": "El ingreso con email y contraseña no está habilitado en Firebase.",
   "auth/email-already-in-use": "Ya existe una cuenta con ese email.",
+  "auth/email-already-exists": "Ya existe una cuenta con ese email.",
+  "admin/not-configured": "Falta configurar la clave de Firebase en el servidor para cambiar emails.",
   "auth/weak-password": "La contraseña tiene que tener al menos 6 caracteres.",
   "auth/missing-password": "Escribí la contraseña.",
   PERMISSION_DENIED: "No tenés permiso para hacer esto.",
