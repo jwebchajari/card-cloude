@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Share2 } from "lucide-react";
+import ShareLocal from "@/components/ShareLocal";
 import { cldUrl } from "@/lib/cloudinary-url";
 import s from "@/app/landing.module.css";
 
@@ -19,36 +21,60 @@ function useFailedImages() {
   return { failed, mark, check };
 }
 
-export default function LocalCard({ local }) {
+/** Tarjeta del inicio. Con `preview` no enlaza y `logoSlot` reemplaza al logo guardado. */
+export default function LocalCard({ local, preview = false, logoSlot = null, coverSlot = null, internal = false, hidden = false }) {
   const { failed, mark, check } = useFailedImages();
-  const logos = local.logo ? [cldUrl(local.logo, "f_auto,q_auto,c_fit,w_320,h_320")] : [`${local.url}/logo.png`, `${local.url}/logo-sm.webp`];
+  const site = String(local.url || "").replace(/\/+$/, "");
+  const logos = local.logo ? [cldUrl(local.logo, "f_auto,q_auto,c_fit,w_320,h_320")] : site ? [`${site}/logo.png`, `${site}/logo-sm.webp`] : [];
   const logo = logos.find((url) => !failed.includes(url));
   const portada = local.portada ? cldUrl(local.portada, "f_auto,q_auto,c_fill,w_560,h_420") : "";
   const cover = portada && !failed.includes(portada) ? portada : "";
   const detail = [local.rubro, local.ciudad].filter(Boolean).join(" · ");
-  const logoImg = logo ? (
+  const logoImg = logoSlot || (logo ? (
     <img key={logo} ref={check} src={logo} alt="" width={160} height={160} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => mark(logo)} />
   ) : (
     <b aria-hidden>{initials(local.nombre)}</b>
+  ));
+
+  const content = (
+    <>
+      <span className={s.cover}>
+        {coverSlot || (cover ? (
+          <img key={cover} ref={check} src={cover} alt="" width={560} height={420} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => mark(cover)} />
+        ) : null)}
+        {coverSlot || cover ? null : (
+          <span className={s.coverLogo}>{logoImg}</span>
+        )}
+      </span>
+      <span className={`${s.cardBody} ${coverSlot || cover ? s.cardBodyBadge : ""}`}>
+        {coverSlot || cover ? <span className={s.cardLogo}>{logoImg}</span> : null}
+        <strong>{local.nombre || "Nombre del local"}</strong>
+        {detail ? <small>{detail}</small> : null}
+        <span className={s.cardCta}>{internal ? "Ver local" : "Ver carta"} <ArrowUpRight size={17} aria-hidden /></span>
+      </span>
+    </>
   );
 
+  if (preview) {
+    return (
+      <div className={`${s.localCard} ${s.localCardPreview}`} aria-label="Vista previa de la tarjeta">
+        {content}
+        <span className={s.shareBtn} aria-hidden><Share2 size={17} /></span>
+      </div>
+    );
+  }
   return (
-    <li>
-      <a className={s.localCard} href={local.url} target="_blank" rel="noopener noreferrer" aria-label={`Ver la carta de ${local.nombre}`}>
-        <span className={s.cover}>
-          {cover ? (
-            <img key={cover} ref={check} src={cover} alt="" width={560} height={420} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => mark(cover)} />
-          ) : (
-            <span className={s.coverLogo}>{logoImg}</span>
-          )}
-        </span>
-        <span className={`${s.cardBody} ${cover ? s.cardBodyBadge : ""}`}>
-          {cover ? <span className={s.cardLogo}>{logoImg}</span> : null}
-          <strong>{local.nombre}</strong>
-          {detail ? <small>{detail}</small> : null}
-          <span className={s.cardCta}>Ver carta <ArrowUpRight size={17} aria-hidden /></span>
-        </span>
-      </a>
+    <li className={s.cardItem} hidden={hidden}>
+      {internal ? (
+        <Link className={s.localCard} href={`/locales/${local.slug}`} aria-label={`Ver ${local.nombre}`}>
+          {content}
+        </Link>
+      ) : (
+        <a className={s.localCard} href={local.url} target="_blank" rel="noopener noreferrer" aria-label={`Ver la carta de ${local.nombre}`}>
+          {content}
+        </a>
+      )}
+      <ShareLocal nombre={local.nombre} url={local.url} />
     </li>
   );
 }

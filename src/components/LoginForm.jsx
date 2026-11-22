@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Brand from "@/components/Brand";
 import { authError, login, resetPassword, useSession } from "@/lib/session";
 import s from "./panel.module.css";
 
@@ -53,9 +53,7 @@ export default function LoginForm() {
   return (
     <main className={s.center}>
       <form className={s.login} onSubmit={submit} noValidate>
-        <Link href="/" className={s.logo}>
-          CardCloude
-        </Link>
+        <Brand />
         <h1>Entrá a tu panel</h1>
         <label className="field">
           Email

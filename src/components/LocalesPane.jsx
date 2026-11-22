@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown, Download, ExternalLink, ImagePlus, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Download, ExternalLink, ImagePlus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import LocalCard from "./LocalCard";
+import LogoEditor from "./LogoEditor";
+import PhotoEditor from "./dashboard/PhotoEditor";
 import { createLocal, getComidas, saveFicha } from "@/lib/admin-data";
-import { MAX_BYTES, cloudinaryConfigured, uploadImage, validateImageFile } from "@/lib/cloudinary-client";
+import { canOpenInBrowser, cloudinaryConfigured, uploadImage, validateImageFile } from "@/lib/cloudinary-client";
 import { cldUrl } from "@/lib/cloudinary-url";
 import { downloadEnvFile } from "@/lib/connection";
 import { authError } from "@/lib/session";
@@ -33,10 +36,14 @@ function LocalLogo({ nombre, logo, url }) {
 }
 
 /** Elige la foto de portada del inicio entre las fotos de los productos del local. */
-function PortadaPicker({ slug, value, onChange }) {
+function PortadaPicker({ slug, value, editadas, onChange, onAuto }) {
   const [fotos, setFotos] = useState(null);
   const [rotas, setRotas] = useState([]);
-  const visibles = fotos?.filter((foto) => !rotas.includes(foto.url) || foto.url === value);
+  // Las portadas editadas son copias: no están entre las fotos de los productos.
+  const propias = [...new Set([...editadas, ...(/^https:\/\//i.test(value || "") ? [value] : [])])]
+    .filter((url) => !fotos?.some((foto) => foto.url === url))
+    .map((url) => ({ url, nombre: "Portada editada" }));
+  const visibles = fotos && [...propias, ...fotos].filter((foto) => !rotas.includes(foto.url) || foto.url === value);
 
   useEffect(() => {
     let alive = true;
@@ -46,12 +53,14 @@ function PortadaPicker({ slug, value, onChange }) {
         const byUrl = new Map();
         for (const c of Object.values(comidas)) if (/^https:\/\//i.test(c?.imagen || "") && !byUrl.has(c.imagen)) byUrl.set(c.imagen, c.nombre || "Producto");
         setFotos([...byUrl].map(([url, nombre]) => ({ url, nombre })));
+        // La misma foto que usa el inicio cuando no hay portada elegida.
+        onAuto(Object.values(comidas).find((c) => c && !c.oculto && /^https:\/\//i.test(c.imagen || ""))?.imagen || "");
       })
       .catch(() => alive && setFotos([]));
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [slug, onAuto]);
 
   return (
     <fieldset className={s.portadas}>
@@ -146,7 +155,14 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
   const [f, setF] = useState(local);
   const [state, setState] = useState("");
   const [uploading, setUploading] = useState(null);
+  const [autoFoto, setAutoFoto] = useState("");
+  const [editorSources, setEditorSources] = useState(null);
+  const [coverSource, setCoverSource] = useState(null);
+  const [editadas, setEditadas] = useState([]);
   const fileRef = useRef(null);
+  const site = String(f.url || "").replace(/\/+$/, "");
+  const currentLogo = f.logo ? [{ src: f.logo }] : /^https:\/\//i.test(site) ? [{ src: `${site}/logo.png` }, { src: `${site}/logo-sm.webp` }] : [];
+  const previewLocal = { ...f, portada: f.portada === "logo" ? "" : f.portada || autoFoto };
   const dirty = FICHA_KEYS.some((k) => f[k] !== local[k]);
   const bodyId = `local-${local.slug}`;
   const meta = [local.slug, local.ciudad, local.rubro, `${local.productos} ${local.productos === 1 ? "producto" : "productos"}`].filter(Boolean).join(" · ");
@@ -155,15 +171,40 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    const invalid = validateImageFile(file) || (file.size > MAX_BYTES ? "El logo pesa más de 10 MB." : "");
+    const invalid = validateImageFile(file);
     if (invalid) {
       setState(invalid);
       return;
     }
+    if (!(await canOpenInBrowser(file))) {
+      setState("No pudimos abrir ese archivo. Exportalo como JPG o PNG.");
+      return;
+    }
+    setState("");
+    setEditorSources([{ file }]);
+  }
+
+  async function applyCover(blob) {
+    setCoverSource(null);
     setState("");
     setUploading(0);
     try {
-      const logo = await uploadImage(file, local.slug, setUploading);
+      const portada = await uploadImage(blob, local.slug, setUploading);
+      setEditadas((list) => [portada, ...list]);
+      setF((prev) => ({ ...prev, portada }));
+    } catch (err) {
+      setState(message(err));
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function applyLogo(blob) {
+    setEditorSources(null);
+    setState("");
+    setUploading(0);
+    try {
+      const logo = await uploadImage(blob, local.slug, setUploading);
       setF((prev) => ({ ...prev, logo }));
     } catch (err) {
       setState(message(err));
@@ -202,6 +243,11 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
 
       {open ? (
         <div id={bodyId} className={s.localBody}>
+          <aside className={s.cardPreview}>
+            <p>Así se ve en el inicio</p>
+            <LocalCard key={`${f.logo}|${f.url}|${previewLocal.portada}`} preview local={previewLocal} />
+          </aside>
+          <div className={s.localFields}>
           <div className={s.logoField}>
             <LocalLogo key={`edit-${f.logo}|${f.url}`} nombre={f.nombre} logo={f.logo} url={f.url} />
             <div className={s.logoActions}>
@@ -209,11 +255,19 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
               <button type="button" className="btn" disabled={uploading !== null || !cloudinaryConfigured()} onClick={() => fileRef.current?.click()}>
                 <ImagePlus size={18} aria-hidden /> {uploading !== null ? `Subiendo ${uploading}%` : f.logo ? "Cambiar logo" : "Subir logo"}
               </button>
+              {currentLogo.length ? <button type="button" className="btn" disabled={uploading !== null || !cloudinaryConfigured()} onClick={() => setEditorSources(currentLogo)}><Pencil size={18} aria-hidden /> Editar logo</button> : null}
               {f.logo ? <button type="button" className="btn" onClick={() => setF({ ...f, logo: "" })}><Trash2 size={18} aria-hidden /> Quitar</button> : null}
             </div>
           </div>
           {!cloudinaryConfigured() ? <p className="hint">Para subir logos falta configurar Cloudinary.</p> : null}
-          <PortadaPicker slug={local.slug} value={f.portada} onChange={(portada) => setF((prev) => ({ ...prev, portada }))} />
+          <PortadaPicker slug={local.slug} value={f.portada} editadas={editadas} onAuto={setAutoFoto} onChange={(portada) => setF((prev) => ({ ...prev, portada }))} />
+          {previewLocal.portada ? (
+            <div className={s.logoActions}>
+              <button type="button" className="btn" disabled={uploading !== null || !cloudinaryConfigured()} onClick={() => setCoverSource({ src: previewLocal.portada })}>
+                <Pencil size={18} aria-hidden /> {uploading !== null ? `Subiendo ${uploading}%` : "Editar foto de portada"}
+              </button>
+            </div>
+          ) : null}
           <label className="field">Nombre público<input className="input" value={f.nombre} maxLength={80} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></label>
           <div className={s.twoCols}>
             <label className="field">Ciudad<input className="input" value={f.ciudad} maxLength={80} onChange={(e) => setF({ ...f, ciudad: e.target.value })} /></label>
@@ -227,6 +281,23 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
             {local.url ? <a className="btn" href={local.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={18} aria-hidden /> Ver carta</a> : null}
             <button type="button" className="btn btn-primary" disabled={!dirty || state === "saving" || uploading !== null} onClick={save}>{state === "saving" ? "Guardando..." : "Guardar"}</button>
           </div>
+          </div>
+          {editorSources ? <LogoEditor sources={editorSources} local={previewLocal} onCancel={() => setEditorSources(null)} onDone={applyLogo} /> : null}
+          {coverSource ? (
+            <div className="panel-ui">
+              <PhotoEditor
+                source={coverSource}
+                title="Editar foto de portada"
+                onCancel={() => setCoverSource(null)}
+                onDone={applyCover}
+                renderPreview={(ref) => (
+                  <div className={s.cardPreview}>
+                    <LocalCard preview local={previewLocal} coverSlot={<canvas ref={ref} width={560} height={420} aria-hidden />} />
+                  </div>
+                )}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </li>

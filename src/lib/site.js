@@ -1,15 +1,15 @@
+// Dominio principal: cardcloude.com redirige a www en Vercel.
+const PRODUCTION_URL = "https://www.cardcloude.com";
+
 function resolveSiteUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const vercel = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(explicit);
-  if (explicit && !(isLocal && vercel)) return explicit;
-  if (vercel) return `https://${vercel}`;
-  return "http://localhost:3001";
+  // Producción y previews apuntan al dominio real para no indexar direcciones .vercel.app.
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV) return PRODUCTION_URL;
+  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
 }
 
 export const SITE_URL = resolveSiteUrl().replace(/\/+$/, "");
 export const SITE_NAME = "CardCloude";
-export const SITE_DESCRIPTION = "Carta online para comercios locales: tus clientes arman el pedido y te llega completo por WhatsApp.";
+export const SITE_DESCRIPTION = "Menú digital, catálogo online y menú QR para tu comercio: tus clientes arman el pedido desde el celular y te llega completo por WhatsApp, sin apps ni intermediarios.";
 
 const whatsapp = (process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "").replace(/\D/g, "");
 const email = (process.env.NEXT_PUBLIC_CONTACT_EMAIL || "").trim();

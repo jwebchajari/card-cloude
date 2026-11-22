@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, LogOut } from "lucide-react";
+import Brand from "@/components/Brand";
 import { listDirectorio } from "@/lib/admin-data";
 import { logout, profileLocales, requestAccess, useSession } from "@/lib/session";
 import s from "./panel.module.css";
@@ -37,6 +38,7 @@ export default function PanelHome() {
     return (
       <main className={s.center}>
         <div className={s.login}>
+          <Brand />
           <h1>No pudimos leer tu cuenta</h1>
           <p className="hint">Revisá tu conexión y probá de nuevo.</p>
           <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Reintentar</button>
@@ -49,6 +51,7 @@ export default function PanelHome() {
     return (
       <main className={s.center}>
         <div className={s.login}>
+          <Brand />
           <h1>Pedido enviado</h1>
           <p className="hint">Tu cuenta todavía no tiene un local asignado. Ya quedó registrado tu pedido de acceso.</p>
           <button type="button" className="btn" onClick={out}><LogOut size={18} aria-hidden /> Salir</button>
@@ -61,6 +64,7 @@ export default function PanelHome() {
   return (
     <main className={s.center}>
       <div className={s.login}>
+        <Brand />
         <h1>Tus locales</h1>
         <ul className={s.plainList}>
           {mine.map((slug) => (

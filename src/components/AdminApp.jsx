@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { listLocales, listSolicitudes, listUsuarios, resolveSolicitud } from "@/lib/admin-data";
 import { logout, authError, useSession } from "@/lib/session";
+import Brand from "./Brand";
 import LocalChecks from "./LocalChecks";
 import LocalesPane from "./LocalesPane";
 import UsuariosPane from "./UsuariosPane";
@@ -63,7 +64,7 @@ export default function AdminApp() {
   return (
     <div className={s.admin}>
       <header className={s.adminHead}>
-        <span className={s.logo}>CardCloude</span>
+        <Brand href="/panel/admin" />
         <button type="button" className="btn" onClick={async () => { await logout(); router.replace("/login"); }}><LogOut size={18} aria-hidden /> Salir</button>
       </header>
       <nav className={s.tabs} aria-label="Administración">

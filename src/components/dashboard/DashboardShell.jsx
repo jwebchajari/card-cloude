@@ -2,10 +2,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { CalendarClock, ExternalLink, LayoutGrid, LogOut, Package, Plus, Shield, Store } from "lucide-react";
+import { CalendarClock, ExternalLink, LayoutGrid, LogOut, Package, Plus, QrCode, Shield, Store } from "lucide-react";
 import Loading from "@/components/Loading";
 import { getFicha } from "@/lib/admin-data";
 import { canEdit, logout, profileLocales, useSession } from "@/lib/session";
+import PanelLogo from "./PanelLogo";
 import s from "./dashboard.module.css";
 
 const Ctx = createContext(null);
@@ -29,7 +30,9 @@ export default function DashboardShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const session = useSession();
-  const [ficha, setFicha] = useState(null);
+  const [loaded, setLoaded] = useState(null);
+  const fichaReady = loaded?.local === local;
+  const ficha = fichaReady ? loaded.data : null;
   const allowed = session.status === "in" && canEdit(session.profile, local);
 
   useEffect(() => {
@@ -39,7 +42,9 @@ export default function DashboardShell({ children }) {
   useEffect(() => {
     if (!allowed) return undefined;
     let alive = true;
-    getFicha(local).then((f) => alive && setFicha(f)).catch(() => {});
+    getFicha(local)
+      .then((data) => alive && setLoaded({ local, data }))
+      .catch(() => alive && setLoaded({ local, data: null }));
     return () => {
       alive = false;
     };
@@ -72,16 +77,18 @@ export default function DashboardShell({ children }) {
     { href: `${base}/agregar`, label: "Agregar", icon: Plus },
     { href: `${base}/datos`, label: "Datos", icon: Store },
     { href: `${base}/horarios`, label: "Horarios", icon: CalendarClock },
+    { href: `${base}/qr`, label: "QR", icon: QrCode },
   ];
   const isActive = (i) => (i.exact ? pathname === i.href || pathname.startsWith(`${base}/editar`) : pathname.startsWith(i.href));
   const isRoot = session.profile?.superadmin === true;
   const several = profileLocales(session.profile).length > 1;
 
   return (
-    <Ctx.Provider value={{ local, user: session.user, profile: session.profile }}>
+    <Ctx.Provider value={{ local, user: session.user, profile: session.profile, ficha, fichaReady }}>
       <div className={`panel-ui ${s.shell}`}>
         <header className={s.topbar}>
           <Link href={base} className={s.brand}>
+            <PanelLogo local={local} ficha={ficha} ready={fichaReady} />
             <span>
               {ficha?.nombre || "Panel"} <small>{local}</small>
             </span>

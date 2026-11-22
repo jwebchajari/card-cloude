@@ -183,7 +183,7 @@ function Slider({ label, Icon, value, onChange }) {
 }
 
 /** Editor de foto: encuadre libre, fondo y ajustes. Devuelve un JPG 4:3 listo para subir. */
-export default function PhotoEditor({ source, product, onCancel, onDone }) {
+export default function PhotoEditor({ source, product, title = "Editar foto", renderPreview = null, onCancel, onDone }) {
   const canvasRef = useRef(null);
   const thumbRef = useRef(null);
   const pointers = useRef(new Map());
@@ -193,6 +193,7 @@ export default function PhotoEditor({ source, product, onCancel, onDone }) {
   const [tab, setTab] = useState("encuadre");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const fullPreview = Boolean(renderPreview);
 
   useEffect(() => {
     let alive = true;
@@ -218,13 +219,14 @@ export default function PhotoEditor({ source, product, onCancel, onDone }) {
         paint(canvas, img, st);
         const thumb = thumbRef.current;
         // La lista de la carta muestra el centro cuadrado de la foto.
-        if (thumb) thumb.getContext("2d").drawImage(canvas, (canvas.width - canvas.height) / 2, 0, canvas.height, canvas.height, 0, 0, thumb.width, thumb.height);
+        if (thumb && fullPreview) thumb.getContext("2d").drawImage(canvas, 0, 0, thumb.width, thumb.height);
+        else if (thumb) thumb.getContext("2d").drawImage(canvas, (canvas.width - canvas.height) / 2, 0, canvas.height, canvas.height, 0, 0, thumb.width, thumb.height);
       } catch {
         setError("Esta foto no se puede editar desde acá. Subila de nuevo desde tu celular o compu.");
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [img, st]);
+  }, [img, st, fullPreview]);
 
   function update(patch) {
     setSt((prev) => {
@@ -321,7 +323,7 @@ export default function PhotoEditor({ source, product, onCancel, onDone }) {
     <Sheet
       open
       onClose={onCancel}
-      title="Editar foto"
+      title={title}
       editor
       footer={
         <div className={s.editorActions}>
@@ -359,11 +361,11 @@ export default function PhotoEditor({ source, product, onCancel, onDone }) {
                 onPointerCancel={onPointerUp}
                 onKeyDown={onKeyDown}
               />
-              <span className={s.frameGuide} aria-hidden />
+              {fullPreview ? null : <span className={s.frameGuide} aria-hidden />}
               {!img ? <span className={s.frameLoading}>Cargando foto...</span> : null}
             </div>
             <p className={s.frameHint}>
-              <Move size={14} aria-hidden /> Arrastrá para mover. El recuadro es lo que se ve en la lista de la carta.
+              <Move size={14} aria-hidden /> {fullPreview ? "Arrastrá para mover. Todo el cuadro se ve en la tarjeta del inicio." : "Arrastrá para mover. El recuadro es lo que se ve en la lista de la carta."}
             </p>
           </div>
 
@@ -445,6 +447,13 @@ export default function PhotoEditor({ source, product, onCancel, onDone }) {
                 {SLIDERS.map(({ key, label, Icon }) => (
                   <Slider key={key} label={label} Icon={Icon} value={st[key]} onChange={(v) => update({ [key]: v })} />
                 ))}
+              </div>
+            ) : null}
+
+            {renderPreview ? (
+              <div className={s.editorPreview}>
+                <p className={s.previewLabel}>Así se ve en el inicio</p>
+                {renderPreview(thumbRef)}
               </div>
             ) : null}
 

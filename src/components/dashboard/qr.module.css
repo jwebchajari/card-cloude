@@ -1,0 +1,97 @@
+.page {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(27px, 6vw, 36px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.page .title + :global(.hint) {
+  margin-top: 6px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+}
+
+.panel {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.panel h2 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.15;
+}
+
+.code {
+  display: block;
+  width: min(100%, 300px);
+  height: auto;
+  margin-inline: auto;
+  border-radius: var(--radius);
+}
+
+.poster {
+  display: block;
+  width: min(100%, 300px);
+  height: auto;
+  margin-inline: auto;
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.link {
+  color: var(--text-muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.link a {
+  color: var(--yellow);
+  text-underline-offset: 3px;
+}
+
+.link svg {
+  display: inline;
+  vertical-align: -2px;
+}
+
+.actions {
+  display: grid;
+  gap: 8px;
+}
+
+.notice {
+  padding: 12px 14px;
+  border: 1px solid var(--yellow);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-size: 14px;
+}
+
+@media (min-width: 480px) {
+  .actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

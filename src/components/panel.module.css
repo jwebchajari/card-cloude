@@ -488,6 +488,217 @@
   gap: 8px;
 }
 
+.localFields {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.cardPreview {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  width: min(100%, 280px);
+}
+
+.cardPreview > p {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logoEditor {
+  display: grid;
+  gap: 16px;
+}
+
+.logoStageWrap {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.logoStageWrap :global(.hint) {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.logoStageWrap :global(.hint) svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.logoStage {
+  position: relative;
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background-color: #d8d8d8;
+  background-image: linear-gradient(45deg, #b8b8b8 25%, transparent 25%, transparent 75%, #b8b8b8 75%), linear-gradient(45deg, #b8b8b8 25%, transparent 25%, transparent 75%, #b8b8b8 75%);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+}
+
+.logoStage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.logoStage canvas:active {
+  cursor: grabbing;
+}
+
+.logoStage canvas:focus-visible {
+  outline-offset: -3px;
+}
+
+.logoStage > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #171310;
+  font-weight: 600;
+}
+
+.logoTools {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.zoomControl {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoomControl :global(.btn) {
+  padding-inline: 0;
+}
+
+.zoomControl input {
+  width: 100%;
+  accent-color: var(--yellow);
+}
+
+.logoBgs {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.logoBgs legend {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logoBgs > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.logoBgs > div label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.logoBgs > div label:has(input:checked) {
+  border-color: var(--yellow);
+  background: var(--accent-soft);
+}
+
+.logoBgs > div label:has(input:focus-visible) {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.logoBgs input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+}
+
+.logoBgs > div span {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+
+.logoBgs > div .bgNone {
+  background-color: #d8d8d8;
+  background-image: linear-gradient(45deg, #9b9b9b 25%, transparent 25%, transparent 75%, #9b9b9b 75%), linear-gradient(45deg, #9b9b9b 25%, transparent 25%, transparent 75%, #9b9b9b 75%);
+  background-position: 0 0, 4px 4px;
+  background-size: 8px 8px;
+}
+
+.colorField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.colorField input {
+  width: 48px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: none;
+}
+
+.logoEditorActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (min-width: 860px) {
+  .localBody {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+
+  .localBody > .cardPreview {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .localFields {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .logoEditor {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  }
+}
+
 @media (max-width: 479px) {
   .newBtn {
     width: 44px;

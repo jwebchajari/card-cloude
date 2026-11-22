@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { Check, Mail, MessageCircle } from "lucide-react";
-import ContactForm from "@/components/ContactForm";
+import { Check } from "lucide-react";
+import JsonLd from "@/components/JsonLd";
 import LocalCard from "@/components/LocalCard";
+import ContactSection from "@/components/site/ContactSection";
+import SiteFooter from "@/components/site/SiteFooter";
+import SiteHeader from "@/components/site/SiteHeader";
 import { getDirectorio } from "@/lib/directorio";
-import { CONTACT } from "@/lib/site";
+import { FAQS, homeJsonLd } from "@/lib/seo";
+import { SOLUCIONES } from "@/lib/soluciones";
 import s from "./landing.module.css";
+import p from "./pages.module.css";
+
+export const metadata = { alternates: { canonical: "/" } };
 
 const STEPS = [
   ["Creamos tu carta", "Cargamos tu marca, tus productos, precios, fotos y horarios."],
@@ -21,34 +28,13 @@ const FEATURES = [
   "Productos con link para compartir",
 ];
 
-const CONTACT_POINTS = ["Sin aplicaciones para tus clientes", "Sin intermediarios en tus pedidos", "Vos cambiás precios y fotos desde tu panel"];
-
-function Brand() {
-  return (
-    <Link href="/" className={s.logo}>
-      <img src="/logo-mark.webp" alt="" width={34} height={36} />
-      CardCloude
-    </Link>
-  );
-}
-
 export default async function Home() {
   const { locales, total } = await getDirectorio();
-  const hasContact = CONTACT.whatsapp || CONTACT.email;
 
   return (
     <>
-      <header className={s.header}>
-        <Brand />
-        <nav className={s.nav} aria-label="Principal">
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#locales">Locales</a>
-          <a href="#contacto">Contacto</a>
-        </nav>
-        <Link href="/login" className="btn">
-          Ingresar
-        </Link>
-      </header>
+      <JsonLd data={homeJsonLd(locales)} />
+      <SiteHeader />
 
       <main>
         <section className={s.hero}>
@@ -112,6 +98,17 @@ export default async function Home() {
           </ul>
         </section>
 
+        <section className={s.section}>
+          <h2>Una solución para cada forma de vender</h2>
+          <ul className={p.solutions}>
+            {SOLUCIONES.map((x) => (
+              <li key={x.slug}>
+                <Link href={`/${x.slug}`}><strong>{x.label}</strong><span>{x.short}</span></Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section id="locales" className={s.section}>
           <div className={s.sectionHead}>
             <h2>Locales adheridos</h2>
@@ -124,45 +121,25 @@ export default async function Home() {
           ) : (
             <p className="hint">Pronto vas a ver acá los locales que ya usan CardCloude.</p>
           )}
+          {locales.length ? <Link href="/locales" className={`btn ${p.more}`} style={{ display: "flex", width: "fit-content", marginInline: "auto" }}>Ver todos los locales</Link> : null}
         </section>
 
-        <section id="contacto" className={s.contact}>
-          <div className={s.contactText}>
-            <h2>¿Querés tu carta online?</h2>
-            <p>Contanos qué vendés y te explicamos cómo empezar.</p>
-            <ul>
-              {CONTACT_POINTS.map((point) => (
-                <li key={point}><Check size={20} aria-hidden /> {point}</li>
-              ))}
-            </ul>
+        <section id="preguntas" className={s.section}>
+          <h2>Preguntas frecuentes</h2>
+          <div className={s.faq}>
+            {FAQS.map(([question, answer]) => (
+              <details key={question}>
+                <summary>{question}</summary>
+                <p>{answer}</p>
+              </details>
+            ))}
           </div>
-          {hasContact ? <ContactForm whatsapp={CONTACT.whatsapp} email={CONTACT.email} /> : null}
         </section>
+
+        <ContactSection />
       </main>
 
-      <footer className={s.footer}>
-        <div className={s.footerBrand}>
-          <Brand />
-          <p>Carta online para comercios locales, con los pedidos directo a WhatsApp.</p>
-        </div>
-        <nav aria-label="Secciones">
-          <h3>Secciones</h3>
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#locales">Locales adheridos</a>
-          <a href="#contacto">Sumar mi local</a>
-        </nav>
-        <nav aria-label="Para locales">
-          <h3>Para locales</h3>
-          <Link href="/login">Ingresar al panel</Link>
-        </nav>
-        {hasContact ? (
-          <div className={s.footerContact}>
-            <h3>Contacto</h3>
-            {CONTACT.whatsappUrl ? <a href={CONTACT.whatsappUrl} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} aria-hidden /> WhatsApp</a> : null}
-            {CONTACT.email ? <a href={`mailto:${CONTACT.email}`}><Mail size={16} aria-hidden /> {CONTACT.email}</a> : null}
-          </div>
-        ) : null}
-      </footer>
+      <SiteFooter />
     </>
   );
 }
