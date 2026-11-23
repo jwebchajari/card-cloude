@@ -130,6 +130,14 @@ export default function DashboardShell({ children }) {
           ))}
         </nav>
 
+        {isRoot && session.profile?.locales?.[local] !== true ? (
+          <p className={s.rootBar} role="note">
+            <Shield size={16} aria-hidden />
+            <span>Estás editando este local como root. Los cambios se publican en su carta.</span>
+            <Link href="/panel/admin">Cambiar de local</Link>
+          </p>
+        ) : null}
+
         <main className={s.content}>{children}</main>
       </div>
     </Ctx.Provider>

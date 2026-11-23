@@ -50,27 +50,45 @@ export default async function Home() {
               </a>
             </div>
           </div>
-          <div className={s.ticket} role="img" aria-label="Ejemplo de un pedido armado que llega por WhatsApp">
-            <span className={s.ticketTag}>Pedido de ejemplo</span>
-            <strong>Nuevo pedido</strong>
-            <dl>
-              <div>
-                <dt>1 x Producto de la carta</dt>
-                <dd>$ 0.000</dd>
+          <div className={s.ticket} role="img" aria-label="Ejemplo de ticket de un pedido por WhatsApp, con cliente, productos, entrega, pago y total a abonar">
+            <div className={s.ticketPaper}>
+              <span className={s.ticketTag}>Pedido de ejemplo</span>
+              <strong>Nuevo pedido</strong>
+              <dl className={s.ticketRows}>
+                <div>
+                  <dt>Cliente</dt>
+                  <dd>Nombre del cliente</dd>
+                </div>
+              </dl>
+              <div className={s.ticketItems}>
+                <span>Productos</span>
+                <ul>
+                  <li>
+                    <span>2 x Producto de la carta</span>
+                    <b>$ 0.000</b>
+                  </li>
+                  <li>
+                    <span>1 x Otro producto</span>
+                    <b>$ 0.000</b>
+                  </li>
+                </ul>
               </div>
-              <div>
-                <dt>Entrega</dt>
-                <dd>Retiro</dd>
-              </div>
-              <div>
-                <dt>Pago</dt>
-                <dd>Transferencia</dd>
-              </div>
-            </dl>
-            <p>
-              <span>Total</span>
-              <b>$ 0.000</b>
-            </p>
+              <dl className={s.ticketRows}>
+                <div>
+                  <dt>Entrega</dt>
+                  <dd>Retiro en el local</dd>
+                </div>
+                <div>
+                  <dt>Pago</dt>
+                  <dd>Transferencia</dd>
+                </div>
+              </dl>
+              <p className={s.ticketTotal}>
+                <span>Total a abonar</span>
+                <b>$ 0.000</b>
+              </p>
+              <small>Enviado por WhatsApp</small>
+            </div>
           </div>
         </section>
 

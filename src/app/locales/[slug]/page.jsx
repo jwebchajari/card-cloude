@@ -8,7 +8,7 @@ import Breadcrumbs from "@/components/site/Breadcrumbs";
 import ContactSection from "@/components/site/ContactSection";
 import SiteFooter from "@/components/site/SiteFooter";
 import SiteHeader from "@/components/site/SiteHeader";
-import { formatPrice, hasOffer, unitPrice, waNumber } from "@/lib/catalogo";
+import { formatPrice, hasOffer, priceText, waNumber } from "@/lib/catalogo";
 import { cldUrl } from "@/lib/cloudinary-url";
 import { getLocalPublico, getVisibles } from "@/lib/directorio";
 import { localJsonLd, pageMeta, shareImage } from "@/lib/seo";
@@ -103,7 +103,7 @@ export default async function LocalPage({ params }) {
                     <div>
                       <h3>{p.nombre}</h3>
                       {p.descripcion ? <p>{p.descripcion}</p> : null}
-                      <strong>{hasOffer(p) ? <del>{formatPrice(p.valor)}</del> : null} {formatPrice(unitPrice(p))}</strong>
+                      <strong>{hasOffer(p) ? <del>{formatPrice(p.valor)}</del> : null} {priceText(p)}</strong>
                     </div>
                   </li>
                 ))}

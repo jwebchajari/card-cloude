@@ -8,8 +8,7 @@ import ProductImage from "@/components/menu/ProductImage";
 import { Price } from "@/components/menu/ProductRow";
 import { setComidaFlag } from "@/lib/admin-data";
 import { getDb } from "@/lib/firebase";
-import { normalizeProducts } from "@/lib/menu-shared";
-import { CATEGORIES } from "@/lib/catalogo";
+import { groupByCategory, normalizeProducts } from "@/lib/menu-shared";
 import { useDashboard } from "./DashboardShell";
 import VisitStats from "./VisitStats";
 import s from "./dashboard.module.css";
@@ -30,7 +29,7 @@ export default function ProductList() {
   if (error) return <p className="error-text">{error}</p>;
   if (!products) return <Loading />;
 
-  const groups = CATEGORIES.map((c) => ({ ...c, items: products.filter((p) => p.categoria === c.id) })).filter((g) => g.items.length);
+  const groups = groupByCategory(products, { hidden: true });
 
   return (
     <div className={s.stack}>

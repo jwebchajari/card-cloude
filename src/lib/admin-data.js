@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, getAuth, inMemoryPersistence, sendPassw
 import { get, push, ref, remove, runTransaction, set, update } from "firebase/database";
 import { firebaseConfig, getAuthClient, getDb } from "./firebase";
 import { idToken } from "./session";
-import { CATEGORIES, INGREDIENT_GROUPS, MAX_BASE_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, hasIngredients, ingredientsText } from "./catalogo";
+import { INGREDIENT_GROUPS, MAX_BASE_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, hasIngredients, ingredientsText, productPacks } from "./catalogo";
 import { SLUG_RE, slugError } from "./slug";
 import { MAX_FRANJAS, WEEK_ORDER, isHHMM } from "@/utils/horarios";
 
@@ -16,19 +16,13 @@ const money = (v) => {
 
 /* ---------------- Panel de cada local ---------------- */
 
-/** Respeta categorías propias de un local aunque no estén en el catálogo común. */
-function cleanCategoria(raw) {
-  const value = txt(raw, 40);
-  if (CATEGORIES.some((c) => c.id === value)) return value;
-  const known = categoryOf(value);
-  return known !== "otros" ? known : value || "otros";
-}
-
 export function cleanComida(raw) {
-  const valor = money(raw.valor);
+  // Con venta por cantidad, `valor` es el precio de la menor cantidad y no hay oferta ni carnes.
+  const packs = productPacks(raw);
+  const valor = packs[0]?.precio ?? money(raw.valor);
   const valorOferta = money(raw.valorOferta);
-  const oferta = Boolean(raw.oferta) && valorOferta > 0 && valorOferta < valor;
-  const categoria = cleanCategoria(raw.categoria);
+  const oferta = !packs.length && Boolean(raw.oferta) && valorOferta > 0 && valorOferta < valor;
+  const categoria = categoryOf(raw.categoria);
   const imagen = txt(raw.imagen, 2000);
   const med = Number(raw.medallones);
   const out = {
@@ -42,7 +36,8 @@ export function cleanComida(raw) {
     oculto: Boolean(raw.oculto),
   };
   const medOk = Number.isInteger(med) && med >= MIN_MEATS && med <= MAX_BASE_MEATS;
-  if (categoria === "hamburguesas") out.medallones = medOk ? med : MIN_MEATS;
+  if (packs.length) out.presentaciones = cleanPacks(raw.presentaciones);
+  else if (categoria === "hamburguesas") out.medallones = medOk ? med : MIN_MEATS;
   else if (!["bebidas", "frutas", "verduras"].includes(categoria) && medOk) out.medallones = med;
   if (out.medallones) {
     const precios = {};

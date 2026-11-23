@@ -84,20 +84,33 @@
   margin-top: 24px;
 }
 
+/* Ticket de pedido: la sombra va afuera porque la máscara del papel la recortaría. */
 .ticket {
   align-self: center;
-  width: min(100%, 360px);
   justify-self: center;
-  padding: 22px;
-  border-radius: var(--radius);
+  width: min(100%, 330px);
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.5));
+}
+
+.ticketPaper {
+  --tooth: 14px;
+  display: grid;
+  gap: 14px;
+  min-height: 470px;
+  padding: 30px 22px;
   background: #fff8e7;
-  box-shadow: 0 18px 44px rgba(227, 38, 27, 0.32);
   color: #171310;
+  font-variant-numeric: tabular-nums;
+  -webkit-mask:
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / var(--tooth) 51% repeat-x,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--tooth) 51% repeat-x;
+  mask:
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / var(--tooth) 51% repeat-x,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--tooth) 51% repeat-x;
 }
 
 .ticketTag {
-  display: inline-block;
-  margin-bottom: 14px;
+  justify-self: center;
   padding: 2px 8px;
   border-radius: 4px;
   background: var(--red);
@@ -106,39 +119,87 @@
   font-weight: 600;
 }
 
-.ticket > strong {
-  display: block;
+.ticketPaper > strong {
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #8a7f6c;
   font-family: var(--font-display);
   font-size: 26px;
+  line-height: 1.1;
+  text-align: center;
 }
 
-.ticket dl {
-  margin-top: 14px;
-  border-top: 1px dashed #8a7f6c;
+.ticketRows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
 }
 
-.ticket dl div,
-.ticket > p {
+.ticketRows div,
+.ticketItems li,
+.ticketTotal {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding-block: 9px;
 }
 
-.ticket dl div {
-  border-bottom: 1px dashed #8a7f6c;
+.ticketRows div {
   font-size: 15px;
 }
 
-.ticket dd {
+.ticketRows dt {
+  color: #5c5245;
+}
+
+.ticketRows dd {
   margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.ticketItems {
+  display: grid;
+  gap: 8px;
+  padding-block: 12px;
+  border-block: 1px dashed #8a7f6c;
+}
+
+.ticketItems > span {
+  color: #5c5245;
+  font-size: 15px;
+}
+
+.ticketItems ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+}
+
+.ticketItems b {
+  flex: none;
   font-weight: 600;
 }
 
-.ticket > p {
-  padding-bottom: 0;
+.ticketTotal {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 2px solid #171310;
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.ticketTotal b {
+  flex: none;
+}
+
+.ticketPaper > small {
+  align-self: end;
+  color: #5c5245;
+  font-size: 13px;
+  text-align: center;
 }
 
 .section {

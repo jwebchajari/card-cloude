@@ -1,16 +1,19 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { deleteComida, getComida, getComidas, saveComida } from "@/lib/admin-data";
 import { authError } from "@/lib/session";
-import { CATEGORIES, MAX_BASE_MEATS, MAX_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, cleanIngredients, hasIngredients, ingredientsText, meatLabel, usesMeats } from "@/lib/catalogo";
+import { CATEGORIES, MAX_BASE_MEATS, MAX_CATEGORY_NAME, MAX_MEATS, MAX_PACKS, MAX_PACK_QTY, MEAT_PRICE_KEYS, MIN_MEATS, cleanIngredients, cleanPacks, customCategories, hasIngredients, ingredientsText, isCommonCategory, meatLabel, packKey, productPacks, slugText, usesMeats } from "@/lib/catalogo";
 import { useDashboard } from "./DashboardShell";
 import ImageUploader from "./ImageUploader";
 import IngredientPicker from "./IngredientPicker";
 import PublishPreview from "./PublishPreview";
 import s from "./dashboard.module.css";
+
+const NEW_CATEGORY = "__nueva__";
+const DEFAULT_PACKS = [1, 6, 12].map((n) => ({ cantidad: String(n), precio: "" }));
 
 const EMPTY = {
   nombre: "",
@@ -65,12 +68,21 @@ function ComidaEditor({ id, onFinished }) {
   const [notFound, setNotFound] = useState(false);
   const [descMode, setDescMode] = useState("ingredientes");
   const [knownIngredients, setKnownIngredients] = useState([]);
+  const [knownCategories, setKnownCategories] = useState([]);
+  const [writingCategory, setWritingCategory] = useState(false);
+  const [sellByPack, setSellByPack] = useState(false);
+  const [packRows, setPackRows] = useState(DEFAULT_PACKS);
 
-  // Los ingredientes cargados en otros productos también aparecen como píldoras.
+  // Los ingredientes y las categorías de otros productos del local se pueden volver a elegir.
   useEffect(() => {
     let alive = true;
     getComidas(local)
-      .then((all) => alive && setKnownIngredients(Object.values(all).map((p) => p?.ingredientes).filter(Boolean)))
+      .then((all) => {
+        if (!alive) return;
+        const items = Object.values(all);
+        setKnownIngredients(items.map((p) => p?.ingredientes).filter(Boolean));
+        setKnownCategories(items.map((p) => p?.categoria));
+      })
       .catch(() => {});
     return () => {
       alive = false;
@@ -90,6 +102,11 @@ function ComidaEditor({ id, onFinished }) {
         setForm({ ...EMPTY, ...c, medallones: Number(c.medallones) || (c.categoria === "hamburguesas" ? 1 : 0), valor: String(c.valor ?? ""), valorOferta: c.valorOferta ? String(c.valorOferta) : "", precios: { doble: String(c.precios?.doble ?? ""), triple: String(c.precios?.triple ?? ""), cuadruple: String(c.precios?.cuadruple ?? "") }, descripcion: c.descripcion || "", ingredientes: cleanIngredients(c.ingredientes) });
         setDescMode(hasIngredients(c.ingredientes) || !c.descripcion ? "ingredientes" : "manual");
         setOriginal(c.imagen || "");
+        const packs = productPacks(c);
+        if (packs.length) {
+          setSellByPack(true);
+          setPackRows(packs.map((p) => ({ cantidad: String(p.cantidad), precio: String(p.precio) })));
+        }
       })
       .catch((e) => alive && setError(authError(e)));
     return () => {
@@ -105,6 +122,10 @@ function ComidaEditor({ id, onFinished }) {
   const rawMeats = Number(form.medallones) || 0;
   const meatsValue = Math.min(MAX_BASE_MEATS, form.categoria === "hamburguesas" ? Math.max(MIN_MEATS, rawMeats) : rawMeats);
 
+  // Una categoría propia solo muestra carnes si el producto ya las tenía.
+  const showMeats = !sellByPack && usesMeats(form.categoria) && (isCommonCategory(form.categoria) || rawMeats > 0);
+  const ownCategories = customCategories(writingCategory ? knownCategories : [form.categoria, ...knownCategories]);
+
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const onInput = (k) => (e) => set(k)(e.target.type === "checkbox" ? e.target.checked : e.target.value);
   const numeric = (k) => (e) => set(k)(e.target.value.replace(/\D/g, "").slice(0, 9));
@@ -113,7 +134,17 @@ function ComidaEditor({ id, onFinished }) {
     setForm((f) => ({ ...f, precios: { ...f.precios, [k]: value } }));
   };
 
-  const offerInvalid = form.oferta && !(Number(form.valorOferta) > 0 && Number(form.valorOferta) < Number(form.valor));
+  // Una fila sin precio se ignora: así se puede vender solo x6 y x12.
+  const packEntries = sellByPack ? packRows.filter((r) => r.precio) : [];
+  const packsIncomplete = packEntries.some((r) => !(Number(r.cantidad) >= 1 && Number(r.cantidad) <= MAX_PACK_QTY && Number(r.precio) > 0));
+  const packsRepeated = new Set(packEntries.map((r) => Number(r.cantidad))).size !== packEntries.length;
+  const presentaciones = packsIncomplete ? {} : cleanPacks(Object.fromEntries(packEntries.map((r) => [packKey(Number(r.cantidad)), Number(r.precio)])));
+  const setPackRow = (i, k) => (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, k === "cantidad" ? 3 : 9);
+    setPackRows((rows) => rows.map((r, n) => (n === i ? { ...r, [k]: value } : r)));
+  };
+
+  const offerInvalid = !sellByPack && form.oferta && !(Number(form.valorOferta) > 0 && Number(form.valorOferta) < Number(form.valor));
 
   // Sin píldoras elegidas se conserva el texto que ya tenía, para no borrar una descripción al cambiar de modo.
   const usesIngredients = descMode === "ingredientes" && hasIngredients(form.ingredientes);
@@ -127,16 +158,23 @@ function ComidaEditor({ id, onFinished }) {
   async function submit(e) {
     e.preventDefault();
     if (!form.nombre.trim()) return setError("Poné un nombre.");
-    if (!(Number(form.valor) > 0)) return setError("Poné un precio mayor a 0.");
+    if (!form.categoria.trim()) return setError("Escribí el nombre de la categoría.");
+    if (sellByPack) {
+      if (packsIncomplete) return setError(`Cada precio necesita una cantidad entre 1 y ${MAX_PACK_QTY}.`);
+      if (packsRepeated) return setError("Hay una cantidad repetida.");
+      if (!packEntries.length) return setError("Poné el precio de al menos una cantidad.");
+    } else if (!(Number(form.valor) > 0)) return setError("Poné un precio mayor a 0.");
     if (offerInvalid) return setError("El precio de oferta tiene que ser menor al precio normal.");
     if (finalDescripcion.length > 600) return setError("Los ingredientes superan los 600 caracteres. Quitá alguno.");
     setSaving(true);
     setError("");
+    // Si ya existe con otra escritura se reutiliza, así no quedan dos secciones iguales.
+    const categoria = ownCategories.find((c) => slugText(c) === slugText(form.categoria)) || form.categoria;
     try {
       await saveComida(
         local,
         id,
-        { ...form, medallones: meatsValue, descripcion: finalDescripcion, ingredientes: usesIngredients ? form.ingredientes : null },
+        { ...form, categoria, presentaciones: sellByPack ? presentaciones : null, oferta: sellByPack ? false : form.oferta, medallones: sellByPack ? 0 : meatsValue, descripcion: finalDescripcion, ingredientes: usesIngredients ? form.ingredientes : null },
         original
       );
       onFinished();
@@ -170,23 +208,48 @@ function ComidaEditor({ id, onFinished }) {
             <span>Nombre</span>
             <input className="input" value={form.nombre} onChange={onInput("nombre")} maxLength={120} required />
           </label>
-          <label className="field">
-            <span>Categoría</span>
-            <select
-              className="input"
-              value={form.categoria}
-              onChange={(e) => {
-                const categoria = e.target.value;
-                setForm((f) => ({ ...f, categoria, medallones: categoria === "hamburguesas" ? Math.max(1, Number(f.medallones) || 0) : 0 }));
-              }}
-            >
-              {(CATEGORIES.some((c) => c.id === form.categoria) ? CATEGORIES : [...CATEGORIES, { id: form.categoria, label: form.categoria }]).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className={s.stack}>
+            <label className="field">
+              <span>Categoría</span>
+              <select
+                className="input"
+                value={writingCategory ? NEW_CATEGORY : form.categoria}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const writing = value === NEW_CATEGORY;
+                  const categoria = writing ? "" : value;
+                  setWritingCategory(writing);
+                  setForm((f) => ({ ...f, categoria, medallones: categoria === "hamburguesas" ? Math.max(1, Number(f.medallones) || 0) : 0 }));
+                }}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+                {ownCategories.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+                <option value={NEW_CATEGORY}>Escribir otra categoría...</option>
+              </select>
+            </label>
+            {writingCategory ? (
+              <label className="field">
+                <span>Nombre de la categoría</span>
+                <input
+                  className="input"
+                  value={form.categoria}
+                  onChange={onInput("categoria")}
+                  maxLength={MAX_CATEGORY_NAME}
+                  placeholder="Ej: Churros rellenos"
+                  autoFocus
+                  required
+                />
+              </label>
+            ) : null}
+          </div>
         </div>
 
         <section className={s.formSection} aria-labelledby="sec-foto">
@@ -227,7 +290,49 @@ function ComidaEditor({ id, onFinished }) {
             Precios
           </h2>
 
-          {usesMeats(form.categoria) ? (
+          <div className={s.segmented} role="radiogroup" aria-label="Forma de venta">
+            <label className={s.segment}>
+              <input type="radio" name="sellMode" checked={!sellByPack} onChange={() => setSellByPack(false)} />
+              <span>Precio único</span>
+            </label>
+            <label className={s.segment}>
+              <input type="radio" name="sellMode" checked={sellByPack} onChange={() => setSellByPack(true)} />
+              <span>Por cantidad</span>
+            </label>
+          </div>
+
+          {sellByPack ? (
+            <div className={s.stack}>
+              {packRows.map((row, i) => (
+                <div key={i} className={s.packRow}>
+                  <label className="field">
+                    <span>Cantidad</span>
+                    <input className="input" inputMode="numeric" value={row.cantidad} onChange={setPackRow(i, "cantidad")} placeholder="6" />
+                  </label>
+                  <label className="field">
+                    <span>Precio total ($)</span>
+                    <input className="input" inputMode="numeric" value={row.precio} onChange={setPackRow(i, "precio")} placeholder="0" />
+                  </label>
+                  <button
+                    type="button"
+                    className={s.iconAction}
+                    onClick={() => setPackRows((rows) => rows.filter((_, n) => n !== i))}
+                    aria-label={`Quitar cantidad ${row.cantidad || i + 1}`}
+                  >
+                    <Trash2 size={18} aria-hidden />
+                  </button>
+                </div>
+              ))}
+              {packRows.length < MAX_PACKS ? (
+                <button type="button" className="btn btn-ghost" onClick={() => setPackRows((rows) => [...rows, { cantidad: "", precio: "" }])}>
+                  <Plus size={18} aria-hidden /> Agregar cantidad
+                </button>
+              ) : null}
+              <p className="hint">Cada precio es el total de esa cantidad. Dejá vacío lo que no vendas.</p>
+            </div>
+          ) : (
+            <>
+          {showMeats ? (
             <label className="field">
               <span>Carnes incluidas en el precio base</span>
               <select className="input" value={meatsValue} onChange={(e) => set("medallones")(Number(e.target.value))}>
@@ -246,7 +351,7 @@ function ComidaEditor({ id, onFinished }) {
               <span>{meatsValue > 0 ? `Precio ${meatLabel(meatsValue).toLowerCase()} ($)` : "Precio ($)"}</span>
               <input className="input" inputMode="numeric" value={form.valor} onChange={numeric("valor")} placeholder="0" required />
             </label>
-            {usesMeats(form.categoria) && meatsValue > 0
+            {showMeats && meatsValue > 0
               ? Object.entries(MEAT_PRICE_KEYS)
                   .filter(([n]) => Number(n) > meatsValue)
                   .map(([n, k]) => (
@@ -257,7 +362,7 @@ function ComidaEditor({ id, onFinished }) {
                   ))
               : null}
           </div>
-          {usesMeats(form.categoria) && meatsValue > 0 ? (
+          {showMeats && meatsValue > 0 ? (
             <p className="hint">
               El cliente elige de {meatsValue} a {MAX_MEATS} carnes. Cada precio es el total. Vacío = lo calcula la carta del local.
             </p>
@@ -282,6 +387,8 @@ function ComidaEditor({ id, onFinished }) {
               </label>
             ) : null}
           </div>
+            </>
+          )}
 
           <label className={s.check}>
             <input type="checkbox" checked={form.oculto} onChange={onInput("oculto")} />
@@ -291,7 +398,7 @@ function ComidaEditor({ id, onFinished }) {
       </div>
 
       <aside className={s.formSide}>
-        <PublishPreview data={{ ...form, descripcion: finalDescripcion }} />
+        <PublishPreview data={{ ...form, presentaciones: sellByPack ? presentaciones : null, descripcion: finalDescripcion }} />
       </aside>
 
       <div className={s.saveBar}>

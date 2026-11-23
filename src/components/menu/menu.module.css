@@ -759,3 +759,9 @@
     height: 128px;
   }
 }
+
+.pricePack {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--text-muted);
+}

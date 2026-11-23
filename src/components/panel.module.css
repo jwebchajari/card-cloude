@@ -414,6 +414,29 @@
   color: var(--brand);
 }
 
+.manageLink {
+  display: inline-flex;
+  width: auto;
+  min-width: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-inline: 14px;
+  border-left: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 559px) {
+  .manageLink {
+    padding-inline: 0;
+  }
+
+  .manageLink span {
+    display: none;
+  }
+}
+
 .localBody {
   display: grid;
   gap: 13px;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import Brand from "@/components/Brand";
 import s from "@/app/landing.module.css";
 
@@ -16,7 +17,11 @@ export default function SiteHeader({ showLogin = true }) {
         <Link href="/login" className="btn">
           Ingresar
         </Link>
-      ) : null}
+      ) : (
+        <Link href="/" className="btn">
+          <ArrowLeft size={18} aria-hidden /> Volver al inicio
+        </Link>
+      )}
     </header>
   );
 }

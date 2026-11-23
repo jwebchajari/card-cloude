@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown, Download, ExternalLink, ImagePlus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, ImagePlus, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import LocalCard from "./LocalCard";
 import LogoEditor from "./LogoEditor";
 import PhotoEditor from "./dashboard/PhotoEditor";
@@ -236,8 +236,9 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
           {local.visible ? <span className={s.badge}>Visible</span> : null}
           <ChevronDown className={s.chevron} size={20} aria-hidden />
         </button>
-        <Link className={s.iconLink} href={`/panel/${local.slug}`} aria-label={`Abrir panel de ${local.nombre}`} title="Abrir panel">
-          <ArrowUpRight size={20} aria-hidden />
+        <Link className={`${s.iconLink} ${s.manageLink}`} href={`/panel/${local.slug}`} aria-label={`Gestionar productos de ${local.nombre}`} title="Gestionar productos">
+          <Package size={20} aria-hidden />
+          <span>Gestionar</span>
         </Link>
       </div>
 
@@ -277,6 +278,8 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
           <label className={s.inlineCheck}><input type="checkbox" checked={f.visible} disabled={!/^https:\/\//i.test(f.url)} onChange={(e) => setF({ ...f, visible: e.target.checked })} /> Mostrar en locales adheridos</label>
           {state && state !== "saving" ? <p className="error-text" role="alert">{state}</p> : null}
           <div className={s.actions}>
+            <Link className="btn" href={`/panel/${local.slug}`}><Package size={18} aria-hidden /> Gestionar productos</Link>
+            <Link className="btn" href={`/panel/${local.slug}/agregar`}><Plus size={18} aria-hidden /> Agregar producto</Link>
             <button type="button" className="btn" onClick={() => downloadEnvFile(local)}><Download size={18} aria-hidden /> Conexión</button>
             {local.url ? <a className="btn" href={local.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={18} aria-hidden /> Ver carta</a> : null}
             <button type="button" className="btn btn-primary" disabled={!dirty || state === "saving" || uploading !== null} onClick={save}>{state === "saving" ? "Guardando..." : "Guardar"}</button>
