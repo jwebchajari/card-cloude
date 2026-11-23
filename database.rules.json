@@ -131,6 +131,20 @@
           "costoEnvioFuera": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000"
           },
+          "opciones": {
+            "envio": {
+              ".validate": "newData.isBoolean()"
+            },
+            "transferencia": {
+              ".validate": "newData.isBoolean()"
+            },
+            "tarjeta": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$otro": {
+              ".validate": false
+            }
+          },
           "extras": {
             "medallon": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000"

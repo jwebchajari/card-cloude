@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, getAuth, inMemoryPersistence, sendPassw
 import { get, push, ref, remove, runTransaction, set, update } from "firebase/database";
 import { firebaseConfig, getAuthClient, getDb } from "./firebase";
 import { idToken } from "./session";
-import { INGREDIENT_GROUPS, MAX_BASE_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, hasIngredients, ingredientsText, productPacks } from "./catalogo";
+import { INGREDIENT_GROUPS, MAX_BASE_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, hasIngredients, ingredientsText, productPacks, cleanOptions } from "./catalogo";
 import { SLUG_RE, slugError } from "./slug";
 import { MAX_FRANJAS, WEEK_ORDER, isHHMM } from "@/utils/horarios";
 
@@ -101,6 +101,9 @@ export async function getFicha(local) {
 export async function saveDatos(local, raw) {
   const costo = String(raw.costoEnvio ?? "").trim();
   const costoFuera = String(raw.costoEnvioFuera ?? "").trim();
+  const options = cleanOptions(raw.opciones);
+  // Con todo activo y nada guardado no hace falta escribir: el valor por defecto ya es activo.
+  const saveOptions = raw.tieneOpciones || !options.envio || !options.transferencia || !options.tarjeta;
   await update(ref(getDb(), `locales/${local}/datos`), {
     nombre: txt(raw.nombre, 80),
     whatsapp: txt(raw.whatsapp, 30),
@@ -110,6 +113,7 @@ export async function saveDatos(local, raw) {
     costoEnvioFuera: costoFuera === "" ? null : money(costoFuera),
     "redes/instagram": txt(raw.redes?.instagram, 200),
     "redes/facebook": txt(raw.redes?.facebook, 200),
+    ...(saveOptions ? { "opciones/envio": options.envio, "opciones/transferencia": options.transferencia, "opciones/tarjeta": options.tarjeta } : {}),
   });
   afterSave(local);
 }

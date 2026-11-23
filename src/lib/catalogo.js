@@ -169,6 +169,12 @@ export const SHIPPING_ZONES = [
   { id: "fuera", label: "Fuera de la ciudad", field: "costoEnvioFuera" },
 ];
 
+/** Lo que no está guardado queda activo: los locales existentes no necesitan cambios en la base. */
+export function cleanOptions(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  return { envio: r.envio !== false, transferencia: r.transferencia !== false, tarjeta: r.tarjeta !== false };
+}
+
 export function fullAddress(dir) {
   return String(dir ?? "").trim();
 }

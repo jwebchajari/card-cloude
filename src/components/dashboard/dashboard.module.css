@@ -1158,3 +1158,23 @@ button.dropEmpty:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.optionText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.optionText small {
+  color: var(--text-muted);
+  font-size: 14px;
+}

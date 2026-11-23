@@ -3,9 +3,25 @@ import { useEffect, useState } from "react";
 import Loading from "@/components/Loading";
 import { getDatos, saveDatos } from "@/lib/admin-data";
 import { authError } from "@/lib/session";
-import { SHIPPING_ZONES, envioLabel, fullAddress, instagramUrl, facebookUrl, waNumber } from "@/lib/catalogo";
+import { SHIPPING_ZONES, cleanOptions, envioLabel, fullAddress, instagramUrl, facebookUrl, waNumber } from "@/lib/catalogo";
 import { useDashboard } from "./DashboardShell";
+import h from "./horarios.module.css";
 import s from "./dashboard.module.css";
+
+function OptionSwitch({ title, hint, checked, onChange }) {
+  return (
+    <div className={s.optionRow}>
+      <span className={s.optionText}>
+        <strong>{title}</strong>
+        <small>{hint}</small>
+      </span>
+      <label className={h.switch}>
+        <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={title} />
+        <span aria-hidden />
+      </label>
+    </div>
+  );
+}
 
 export default function DatosForm() {
   const { local } = useDashboard();
@@ -23,6 +39,8 @@ export default function DatosForm() {
           costoEnvio: d.costoEnvio === null || d.costoEnvio === undefined ? "" : String(d.costoEnvio),
           costoEnvioFuera: d.costoEnvioFuera === null || d.costoEnvioFuera === undefined ? "" : String(d.costoEnvioFuera),
           redes: { instagram: d.redes?.instagram || "", facebook: d.redes?.facebook || "" },
+          opciones: cleanOptions(d.opciones),
+          tieneOpciones: Boolean(d.opciones),
         })
       )
       .catch((e) => setStatus({ saving: false, msg: "", error: authError(e) }));
@@ -32,6 +50,7 @@ export default function DatosForm() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const setNested = (g, k) => (e) => setForm((f) => ({ ...f, [g]: { ...f[g], [k]: e.target.value } }));
+  const setOption = (k) => (value) => setForm((f) => ({ ...f, opciones: { ...f.opciones, [k]: value } }));
   const wa = waNumber(form.whatsapp);
 
   async function submit(e) {
@@ -39,6 +58,8 @@ export default function DatosForm() {
     setStatus({ saving: true, msg: "", error: "" });
     try {
       await saveDatos(local, form);
+      // Una vez guardada una opción apagada, volver a activarla también tiene que escribirse.
+      setForm((f) => ({ ...f, tieneOpciones: f.tieneOpciones || Object.values(form.opciones).includes(false) }));
       setStatus({ saving: false, msg: "Guardado. La carta se actualiza en segundos.", error: "" });
     } catch (err) {
       setStatus({ saving: false, msg: "", error: authError(err) });
@@ -67,29 +88,40 @@ export default function DatosForm() {
       </fieldset>
 
       <fieldset className={s.card}>
-        <legend className={s.legend}>Cobro y envío</legend>
-        <label className="field">
-          <span>Alias para transferencias</span>
-          <input className="input" value={form.alias} onChange={set("alias")} maxLength={80} placeholder="mi.local" autoCapitalize="none" />
-        </label>
-        <div className="field">
-          <div className={s.row2}>
-            {SHIPPING_ZONES.map((z) => (
-              <label key={z.id} className="field">
-                <span>Envío {z.label.charAt(0).toLowerCase() + z.label.slice(1)} ($)</span>
-                <input
-                  className="input"
-                  inputMode="numeric"
-                  value={form[z.field]}
-                  onChange={(e) => setForm((f) => ({ ...f, [z.field]: e.target.value.replace(/\D/g, "").slice(0, 9) }))}
-                  placeholder="A confirmar"
-                />
-                <span className="hint">En la carta: {envioLabel(form[z.field])}</span>
-              </label>
-            ))}
+        <legend className={s.legend}>Envío y formas de pago</legend>
+        <p className="hint">Lo que apagues deja de aparecer en la carta. Retiro en el local y efectivo siempre están disponibles.</p>
+
+        <OptionSwitch title="Envío a domicilio" hint={form.opciones.envio ? "El cliente puede pedir envío." : "Solo retiro en el local."} checked={form.opciones.envio} onChange={setOption("envio")} />
+        {form.opciones.envio ? (
+          <div className="field">
+            <div className={s.row2}>
+              {SHIPPING_ZONES.map((z) => (
+                <label key={z.id} className="field">
+                  <span>Envío {z.label.charAt(0).toLowerCase() + z.label.slice(1)} ($)</span>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    value={form[z.field]}
+                    onChange={(e) => setForm((f) => ({ ...f, [z.field]: e.target.value.replace(/\D/g, "").slice(0, 9) }))}
+                    placeholder="A confirmar"
+                  />
+                  <span className="hint">En la carta: {envioLabel(form[z.field])}</span>
+                </label>
+              ))}
+            </div>
+            <span className="hint">Vacío = a confirmar, 0 = gratis.</span>
           </div>
-          <span className="hint">Vacío = a confirmar, 0 = gratis.</span>
-        </div>
+        ) : null}
+
+        <OptionSwitch title="Transferencia" hint={form.opciones.transferencia ? "El cliente ve tu alias al pagar." : "No se ofrece en la carta."} checked={form.opciones.transferencia} onChange={setOption("transferencia")} />
+        {form.opciones.transferencia ? (
+          <label className="field">
+            <span>Alias para transferencias</span>
+            <input className="input" value={form.alias} onChange={set("alias")} maxLength={80} placeholder="mi.local" autoCapitalize="none" />
+          </label>
+        ) : null}
+
+        <OptionSwitch title="Tarjeta" hint={form.opciones.tarjeta ? "El cliente puede elegir pagar con tarjeta." : "No se ofrece en la carta."} checked={form.opciones.tarjeta} onChange={setOption("tarjeta")} />
       </fieldset>
 
       <fieldset className={s.card}>
