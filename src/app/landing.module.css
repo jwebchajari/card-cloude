@@ -34,6 +34,9 @@
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
 }
 
@@ -43,7 +46,6 @@
 
 .hero,
 .section,
-.band,
 .contact,
 .footer {
   padding-inline: max(var(--gutter), calc((100vw - 1120px) / 2));
@@ -208,7 +210,6 @@
 }
 
 .section h2,
-.band h2,
 .contact h2 {
   font-family: var(--font-display);
   font-size: clamp(30px, 7vw, 46px);
@@ -253,32 +254,6 @@
 
 .steps p {
   color: var(--text-muted);
-}
-
-.band {
-  padding-block: 56px;
-  background: var(--red-deep);
-  color: #fff;
-}
-
-.band ul {
-  display: grid;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 0;
-  list-style: none;
-}
-
-.band li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.band svg {
-  flex: none;
-  margin-top: 3px;
-  color: var(--yellow);
 }
 
 .locales {
@@ -436,8 +411,8 @@
   right: 6px;
   bottom: 6px;
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
@@ -567,7 +542,7 @@ button.shareBtn:hover {
 .footerContact {
   display: grid;
   align-content: start;
-  gap: 6px;
+  gap: 0;
 }
 
 .footer h3 {
@@ -581,7 +556,7 @@ button.shareBtn:hover {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  min-height: 32px;
+  min-height: 44px;
   overflow-wrap: anywhere;
   color: var(--text-muted);
   text-decoration: none;
@@ -621,10 +596,6 @@ button.shareBtn:hover {
 
   .steps {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .band ul {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .locales {

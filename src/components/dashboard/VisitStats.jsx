@@ -4,7 +4,7 @@ import { getVisitas } from "@/lib/admin-data";
 import { TIMEZONE } from "@/lib/catalogo";
 import s from "./dashboard.module.css";
 
-function lastDays(n) {
+export function lastDays(n) {
   const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" });
   const label = new Intl.DateTimeFormat("es-AR", { timeZone: TIMEZONE, weekday: "short", day: "numeric" });
   const out = [];

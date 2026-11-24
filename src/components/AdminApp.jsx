@@ -7,6 +7,7 @@ import { logout, authError, useSession } from "@/lib/session";
 import Brand from "./Brand";
 import LocalChecks from "./LocalChecks";
 import LocalesPane from "./LocalesPane";
+import MetricasPane from "./MetricasPane";
 import UsuariosPane from "./UsuariosPane";
 import s from "./panel.module.css";
 
@@ -59,7 +60,7 @@ export default function AdminApp() {
   if (!isSuper || (!data && !error)) return <main className={s.center}><p role="status">Cargando...</p></main>;
   if (error) return <main className={s.center}><p className="error-text" role="alert">{error}</p></main>;
 
-  const tabs = [["locales", `Locales (${data.locales.length})`], ["usuarios", `Usuarios (${data.usuarios.length})`], ["solicitudes", `Solicitudes (${data.solicitudes.length})`]];
+  const tabs = [["locales", `Locales (${data.locales.length})`], ["usuarios", `Usuarios (${data.usuarios.length})`], ["solicitudes", `Solicitudes (${data.solicitudes.length})`], ["metricas", "Métricas"]];
 
   return (
     <div className={s.admin}>
@@ -73,6 +74,7 @@ export default function AdminApp() {
       <main className={s.adminGrid}>
         {tab === "locales" ? <LocalesPane locales={data.locales} onChange={load} /> : null}
         {tab === "usuarios" ? <UsuariosPane usuarios={data.usuarios} locales={data.locales} selfUid={session.user.uid} onChange={load} /> : null}
+        {tab === "metricas" ? <MetricasPane /> : null}
         {tab === "solicitudes" ? (
           <ul className={s.plainList}>
             {data.solicitudes.length ? data.solicitudes.map((sol) => <SolicitudRow key={sol.uid} sol={sol} locales={data.locales} onDone={load} />) : <li className="hint">No hay solicitudes pendientes.</li>}

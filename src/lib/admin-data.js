@@ -167,6 +167,14 @@ export function discardImage(local, url) {
 
 /* ---------------- Administración (root) ---------------- */
 
+export async function getMetricasSitio() {
+  const token = await idToken();
+  const res = await fetch("/api/panel/metricas", { headers: { authorization: `Bearer ${token || ""}` }, cache: "no-store" });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.code || "metricas");
+  return body.data || {};
+}
+
 function cleanUrl(raw) {
   const value = txt(raw, 200).replace(/\/+$/, "");
   if (!value) return "";

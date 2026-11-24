@@ -4,10 +4,14 @@ import JsonLd from "@/components/JsonLd";
 import LocalCard from "@/components/LocalCard";
 import ContactSection from "@/components/site/ContactSection";
 import SiteFooter from "@/components/site/SiteFooter";
+import PanelCarousel from "@/components/site/PanelCarousel";
 import SiteHeader from "@/components/site/SiteHeader";
+import VideoSection from "@/components/site/VideoSection";
 import { getDirectorio } from "@/lib/directorio";
 import { FAQS, homeJsonLd } from "@/lib/seo";
+import { CONTACT } from "@/lib/site";
 import { SOLUCIONES } from "@/lib/soluciones";
+import h from "@/components/site/home.module.css";
 import s from "./landing.module.css";
 import p from "./pages.module.css";
 
@@ -19,17 +23,26 @@ const STEPS = [
   ["Recibís el pedido", "El cliente elige, y el pedido te llega armado por WhatsApp."],
 ];
 
+const CONTACT_POINTS = [
+  "Listo para cargar tus productos en 2 días o menos",
+  "Consultá el precio por WhatsApp",
+  "Tus clientes pueden instalar la app de tu local",
+];
+
 const FEATURES = [
   "Carta pensada para el celular",
   "Estado abierto o cerrado según tus horarios",
   "Envío a domicilio o retiro en el local",
-  "Pago en efectivo o transferencia, con tu alias",
+  "Pago en efectivo, transferencia o tarjeta",
   "Panel propio para cambiar precios y fotos",
   "Productos con link para compartir",
 ];
 
 export default async function Home() {
   const { locales, total } = await getDirectorio();
+  const priceUrl = CONTACT.whatsapp
+    ? `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent("Hola, quiero consultar el precio de CardCloude para mi local.")}`
+    : "#contacto";
 
   return (
     <>
@@ -40,7 +53,7 @@ export default async function Home() {
         <section className={s.hero}>
           <div>
             <h1>Tu carta online. Los pedidos, directo a tu <em>WhatsApp.</em></h1>
-            <p>CardCloude le da a tu comercio una carta propia que tus clientes abren desde el celular, sin aplicaciones y sin intermediarios.</p>
+            <p>CardCloude le da a tu comercio un menú digital propio que tus clientes abren desde el celular, sin aplicaciones y sin intermediarios.</p>
             <div className={s.heroActions}>
               <a href="#contacto" className="btn btn-primary">
                 Quiero sumar mi local
@@ -105,15 +118,20 @@ export default async function Home() {
           </ol>
         </section>
 
-        <section className={s.band}>
-          <h2>Todo lo que necesita tu carta</h2>
-          <ul>
-            {FEATURES.map((feature) => (
-              <li key={feature}>
-                <Check size={18} aria-hidden /> {feature}
-              </li>
-            ))}
-          </ul>
+        <VideoSection cta={priceUrl} />
+
+        <section id="panel" className={`${s.section} ${h.panelSection}`}>
+          <div>
+            <h2>Manejá todo desde tu celular</h2>
+            <ul className={h.features}>
+              {FEATURES.map((feature) => (
+                <li key={feature}>
+                  <Check size={18} aria-hidden /> {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <PanelCarousel />
         </section>
 
         <section className={s.section}>
@@ -154,7 +172,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <ContactSection />
+        <ContactSection points={CONTACT_POINTS} />
       </main>
 
       <SiteFooter />

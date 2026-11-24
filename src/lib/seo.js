@@ -1,9 +1,10 @@
 import { categoryLabel, waNumber } from "./catalogo";
 import { cldUrl } from "./cloudinary-url";
+import { VIDEO } from "./home-media";
 import { CONTACT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./site";
 import { openingHoursSpec } from "@/utils/horarios";
 
-export const SEO_TITLE = "Menú digital y catálogo online con pedidos por WhatsApp";
+export const SEO_TITLE = "Menú digital y catálogo con pedidos por WhatsApp";
 const DEFAULT_IMAGE = { url: "/opengraph-image.png", width: 1200, height: 630, alt: "CardCloude: carta digital con pedidos directo a WhatsApp" };
 const ORG_ID = `${SITE_URL}/#organization`;
 
@@ -11,7 +12,7 @@ export const FAQS = [
   ["¿Qué es CardCloude?", "Es un menú digital y catálogo online para comercios gastronómicos y locales. Tus clientes ven tus productos desde el celular, arman el pedido y te lo envían completo por WhatsApp."],
   ["¿Mis clientes tienen que descargar una aplicación?", "No. La carta se abre desde un link en el navegador del celular. Podés compartirlo por Instagram, WhatsApp o con un QR en el mostrador."],
   ["¿Cómo recibo los pedidos?", "Te llegan a tu WhatsApp con los productos, la forma de entrega y el medio de pago elegidos por el cliente, sin intermediarios."],
-  ["¿Puedo cambiar precios y fotos?", "Sí. Cada local tiene un panel propio para actualizar productos, precios, fotos, datos y horarios."],
+  ["¿Cuánto cuesta CardCloude?", "El precio puede variar. Escribinos por WhatsApp y te pasamos el valor actualizado para tu local."],
 ];
 
 /** Metadatos completos de una página pública. */
@@ -65,6 +66,18 @@ export function homeJsonLd(locales) {
       provider: { "@id": ORG_ID },
       areaServed: { "@type": "Country", name: "Argentina" },
       url: SITE_URL,
+    },
+    {
+      "@type": "VideoObject",
+      "@id": `${SITE_URL}/#video`,
+      name: VIDEO.name,
+      description: VIDEO.description,
+      thumbnailUrl: VIDEO.poster,
+      contentUrl: VIDEO.src,
+      uploadDate: VIDEO.uploadDate,
+      duration: VIDEO.duration,
+      inLanguage: "es-AR",
+      publisher: { "@id": ORG_ID },
     },
     faqNode(FAQS, `${SITE_URL}/#faq`),
   ];

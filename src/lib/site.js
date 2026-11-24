@@ -9,7 +9,7 @@ function resolveSiteUrl() {
 
 export const SITE_URL = resolveSiteUrl().replace(/\/+$/, "");
 export const SITE_NAME = "CardCloude";
-export const SITE_DESCRIPTION = "Menú digital, catálogo online y menú QR para tu comercio: tus clientes arman el pedido desde el celular y te llega completo por WhatsApp, sin apps ni intermediarios.";
+export const SITE_DESCRIPTION = "Menú digital, catálogo online y menú QR para tu comercio. Tus clientes arman el pedido en el celular y te llega por WhatsApp, sin apps ni intermediarios.";
 
 const whatsapp = (process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "").replace(/\D/g, "");
 const email = (process.env.NEXT_PUBLIC_CONTACT_EMAIL || "").trim();

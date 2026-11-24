@@ -1,4 +1,5 @@
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import SiteMetrics from "@/components/site/SiteMetrics";
 import { SEO_TITLE } from "@/lib/seo";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -27,7 +28,10 @@ export const viewport = { themeColor: "#0b0a08", width: "device-width", initialS
 export default function RootLayout({ children }) {
   return (
     <html lang="es-AR" className={`${bricolage.variable} ${instrument.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <SiteMetrics />
+      </body>
     </html>
   );
 }
