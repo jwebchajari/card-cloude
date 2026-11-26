@@ -168,3 +168,43 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* Editor de fotos: casi toda la pantalla y sin scroll; el contenido se acomoda al alto. */
+@media (min-width: 768px) {
+  .sheet.sheetEditor {
+    width: calc(100vw - 32px);
+    max-width: 1480px;
+    height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px);
+  }
+  .sheetEditor .sheetInner {
+    height: 100%;
+    max-height: none;
+  }
+  .sheetEditor .sheetHeader {
+    min-height: 52px;
+    padding-top: 6px;
+  }
+  .sheetEditor .sheetBody {
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sheet.sheetEditor,
+  .sheetEditor .sheetInner {
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .sheetEditor .sheetHeader {
+    min-height: 48px;
+    padding-top: calc(4px + env(safe-area-inset-top));
+  }
+  .sheetEditor .sheetBody {
+    padding-bottom: 12px;
+  }
+}

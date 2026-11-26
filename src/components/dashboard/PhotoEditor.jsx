@@ -373,7 +373,7 @@ export default function PhotoEditor({ source, product, forma: formaId, title = "
               {!img ? <span className={s.frameLoading}>Cargando foto...</span> : null}
             </div>
             <p className={s.frameHint}>
-              <Move size={14} aria-hidden /> {fullPreview ? "Arrastrá para mover. Todo el cuadro se ve en la tarjeta del inicio." : guide.w >= 1 ? "Arrastrá para mover. Toda la foto se ve en la carta." : `Arrastrá para mover. ${forma.round ? "El círculo" : "El recuadro"} es lo que se ve en la carta.`}
+              <Move size={14} aria-hidden /> {fullPreview ? "Arrastrá para mover. Todo el cuadro se ve en la tarjeta del inicio." : guide.w >= 1 ? "Arrastrá para mover. Toda la foto se ve en la carta." : `Arrastrá para mover. ${forma.round ? "El círculo" : "El recuadro"} es lo que se ve.`}
             </p>
           </div>
 

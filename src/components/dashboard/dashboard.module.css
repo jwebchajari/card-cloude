@@ -1269,3 +1269,85 @@ button.dropEmpty:hover {
     max-width: 440px;
   }
 }
+
+/* ---------- Editor de fotos a pantalla completa ---------- */
+@media (max-width: 767px) {
+  /* En el celular la foto no tapa las herramientas. */
+  .frame {
+    max-height: 46dvh;
+    margin-inline: auto;
+    width: min(100%, calc(46dvh * 4 / 3));
+  }
+}
+
+@media (min-width: 768px) {
+  .editor {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 20px;
+  }
+  /* La foto ocupa todo el alto disponible sin cortarse: el ancho sale del alto. */
+  .editorStage {
+    container-type: size;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .frame {
+    flex: none;
+    width: min(100cqw, calc((100cqh - 32px) * 4 / 3));
+  }
+  .frameHint {
+    width: min(100cqw, calc((100cqh - 32px) * 4 / 3));
+  }
+  .editorPanel {
+    min-height: 0;
+    overflow-y: auto;
+    gap: 10px;
+    scrollbar-width: thin;
+  }
+  .editorPanel .editorPreview {
+    padding-top: 10px;
+  }
+  .editorPanel .toolPanel {
+    gap: 6px;
+  }
+  .editor input[type="range"] {
+    min-height: 26px;
+  }
+}
+
+@media (max-width: 767px) {
+  .editor,
+  .editorPanel {
+    gap: 10px;
+  }
+  .editorStage {
+    padding-bottom: 6px;
+  }
+  .editorPanel .editorPreview {
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 767px) {
+  .editorPanel .toolPanel {
+    gap: 4px;
+  }
+  .editor input[type="range"] {
+    min-height: 24px;
+  }
+}
+
+/* Celulares bajos: la guía sobre la foto ya muestra el recorte, la tarjeta se oculta para no hacer scroll. */
+@media (max-width: 767px) and (max-height: 800px) {
+  .editorPanel .editorPreview {
+    display: none;
+  }
+}
