@@ -252,6 +252,9 @@
         "visible": {
           ".validate": "newData.isBoolean()"
         },
+        "fotoForma": {
+          ".validate": "newData.isString() && newData.val().matches(/^(cuadrada|redonda|horizontal|vertical)$/)"
+        },
         "$otro": {
           ".validate": false
         }

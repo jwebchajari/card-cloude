@@ -459,6 +459,7 @@ function ComidaEditor({ id, onFinished }) {
         </section>
       </div>
 
+      <div className={s.formSideCol}>
       <aside className={s.formSide}>
         <PublishPreview data={{ ...form, presentaciones: sellByPack ? presentaciones : null, descripcion: finalDescripcion }} />
       </aside>
@@ -479,6 +480,7 @@ function ComidaEditor({ id, onFinished }) {
             {saving ? "Guardando..." : id ? "Guardar cambios" : "Publicar producto"}
           </button>
         </div>
+      </div>
       </div>
     </form>
   );

@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, getAuth, inMemoryPersistence, sendPassw
 import { get, push, ref, remove, runTransaction, set, update } from "firebase/database";
 import { firebaseConfig, getAuthClient, getDb } from "./firebase";
 import { idToken } from "./session";
-import { DEFAULT_VERSION_BASE, INGREDIENT_GROUPS, MAX_BASE_MEATS, MAX_VERSION_NAME, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, cleanVersions, hasIngredients, ingredientsText, productPacks, cleanOptions } from "./catalogo";
+import { DEFAULT_FOTO_FORMA, DEFAULT_VERSION_BASE, fotoFormaId, INGREDIENT_GROUPS, MAX_BASE_MEATS, MAX_VERSION_NAME, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, cleanVersions, hasIngredients, ingredientsText, productPacks, cleanOptions } from "./catalogo";
 import { SLUG_RE, slugError } from "./slug";
 import { MAX_FRANJAS, WEEK_ORDER, isHHMM } from "@/utils/horarios";
 
@@ -202,6 +202,8 @@ export function cleanFicha(raw) {
     rubro: txt(raw.rubro, 60),
     url,
     visible: Boolean(raw.visible) && Boolean(url),
+    // La forma por defecto no se guarda: un local sin el campo se ve igual.
+    ...(fotoFormaId(raw.fotoForma) !== DEFAULT_FOTO_FORMA ? { fotoForma: fotoFormaId(raw.fotoForma) } : {}),
     ...(/^https:\/\//i.test(logo) ? { logo } : {}),
     ...(portada === "logo" || /^https:\/\//i.test(portada) ? { portada } : {}),
   };
@@ -227,6 +229,7 @@ export async function listLocales() {
         url: ficha.url || "",
         logo: ficha.logo || "",
         portada: ficha.portada || "",
+        fotoForma: fotoFormaId(ficha.fotoForma),
         visible: ficha.visible === true,
         productos: Object.keys(l?.comidas || {}).length,
       };

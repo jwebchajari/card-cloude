@@ -1178,3 +1178,94 @@ button.dropEmpty:hover {
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* ---------- Forma de la foto según la carta del local ---------- */
+.shapeImg.shapeImg {
+  height: auto;
+  flex-shrink: 0;
+}
+
+.shapeImg.shape_cuadrada,
+.shapeImg.shape_redonda {
+  width: 112px;
+}
+
+.shapeImg.shape_redonda {
+  border-radius: 50%;
+}
+
+.shapeImg.shape_horizontal {
+  width: 148px;
+}
+
+.shapeImg.shape_vertical {
+  width: 100px;
+}
+
+.previewShape {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.previewRow {
+  margin: 0;
+}
+
+/* La guía de recorte también sobre la foto actual del producto. */
+.dropFrame {
+  position: relative;
+}
+
+/* ---------- Formulario de producto: todo a la vista al 100% ---------- */
+/* En móvil la columna lateral no existe: vista previa y guardar siguen el flujo normal. */
+.formSideCol {
+  display: contents;
+}
+
+@media (min-width: 900px) {
+  .content:has(.formGrid) {
+    max-width: 1240px;
+  }
+  .formGrid {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    column-gap: 32px;
+  }
+  /* Vista previa y botón de guardar fijos a la derecha mientras se edita. */
+  .formSideCol {
+    position: sticky;
+    top: calc(var(--header-h) + 68px);
+    display: grid;
+    gap: 16px;
+    align-self: start;
+    max-height: calc(100dvh - var(--header-h) - 84px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .formSideCol .formSide {
+    position: static;
+  }
+  .formSideCol .saveBar {
+    position: static;
+    padding: 0;
+    background: none;
+  }
+  .formSideCol .saveActions {
+    flex-direction: column-reverse;
+  }
+  .formSideCol .dangerBtn {
+    justify-content: center;
+    min-height: var(--tap);
+  }
+  /* La foto no ocupa toda la columna: alcanza para ver el encuadre. */
+  .uploader .drop {
+    max-width: 440px;
+  }
+}

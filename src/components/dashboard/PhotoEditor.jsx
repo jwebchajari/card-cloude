@@ -6,6 +6,7 @@ import { Price } from "@/components/menu/ProductRow";
 import m from "@/components/menu/menu.module.css";
 import { cldUrl } from "@/lib/cloudinary-url";
 import { normalizeProduct } from "@/lib/menu-shared";
+import { fotoForma } from "@/lib/catalogo";
 import s from "./dashboard.module.css";
 
 // Foto guardada en 4:3: sirve para la miniatura cuadrada, el detalle 16:10 y la tarjeta de compartir.
@@ -183,7 +184,9 @@ function Slider({ label, Icon, value, onChange }) {
 }
 
 /** Editor de foto: encuadre libre, fondo y ajustes. Devuelve un JPG 4:3 listo para subir. */
-export default function PhotoEditor({ source, product, title = "Editar foto", renderPreview = null, onCancel, onDone }) {
+export default function PhotoEditor({ source, product, forma: formaId, title = "Editar foto", renderPreview = null, onCancel, onDone }) {
+  const forma = fotoForma(formaId);
+  const guide = forma.guide;
   const canvasRef = useRef(null);
   const thumbRef = useRef(null);
   const pointers = useRef(new Map());
@@ -218,15 +221,18 @@ export default function PhotoEditor({ source, product, title = "Editar foto", re
       try {
         paint(canvas, img, st);
         const thumb = thumbRef.current;
-        // La lista de la carta muestra el centro cuadrado de la foto.
+        // La lista de la carta muestra el centro de la foto con la forma del local.
         if (thumb && fullPreview) thumb.getContext("2d").drawImage(canvas, 0, 0, thumb.width, thumb.height);
-        else if (thumb) thumb.getContext("2d").drawImage(canvas, (canvas.width - canvas.height) / 2, 0, canvas.height, canvas.height, 0, 0, thumb.width, thumb.height);
+        else if (thumb) {
+          const sw = canvas.width * guide.w;
+          thumb.getContext("2d").drawImage(canvas, (canvas.width - sw) / 2, 0, sw, canvas.height, 0, 0, thumb.width, thumb.height);
+        }
       } catch {
         setError("Esta foto no se puede editar desde acá. Subila de nuevo desde tu celular o compu.");
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [img, st, fullPreview]);
+  }, [img, st, fullPreview, guide.w]);
 
   function update(patch) {
     setSt((prev) => {
@@ -361,11 +367,13 @@ export default function PhotoEditor({ source, product, title = "Editar foto", re
                 onPointerCancel={onPointerUp}
                 onKeyDown={onKeyDown}
               />
-              {fullPreview ? null : <span className={s.frameGuide} aria-hidden />}
+              {fullPreview || guide.w >= 1 ? null : (
+                <span className={s.frameGuide} style={{ left: `${((1 - guide.w) / 2) * 100}%`, right: `${((1 - guide.w) / 2) * 100}%`, borderRadius: forma.round ? "50%" : undefined, border: forma.round ? "1px dashed rgba(253, 246, 240, 0.75)" : undefined }} aria-hidden />
+              )}
               {!img ? <span className={s.frameLoading}>Cargando foto...</span> : null}
             </div>
             <p className={s.frameHint}>
-              <Move size={14} aria-hidden /> {fullPreview ? "Arrastrá para mover. Todo el cuadro se ve en la tarjeta del inicio." : "Arrastrá para mover. El recuadro es lo que se ve en la lista de la carta."}
+              <Move size={14} aria-hidden /> {fullPreview ? "Arrastrá para mover. Todo el cuadro se ve en la tarjeta del inicio." : guide.w >= 1 ? "Arrastrá para mover. Toda la foto se ve en la carta." : `Arrastrá para mover. ${forma.round ? "El círculo" : "El recuadro"} es lo que se ve en la carta.`}
             </p>
           </div>
 
@@ -468,7 +476,14 @@ export default function PhotoEditor({ source, product, title = "Editar foto", re
                       <Price product={preview} />
                     </div>
                   </div>
-                  <canvas ref={thumbRef} width={224} height={224} className={`${m.rowImg} ${s.previewThumb}`} aria-hidden />
+                  <canvas
+                    ref={thumbRef}
+                    width={240}
+                    height={Math.round((240 * 3) / (4 * guide.w))}
+                    className={`${m.rowImg} ${s.previewThumb} ${s.shapeImg} ${s[`shape_${forma.id}`]}`}
+                    style={{ aspectRatio: forma.ratio }}
+                    aria-hidden
+                  />
                 </div>
               </div>
             ) : null}

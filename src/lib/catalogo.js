@@ -179,6 +179,26 @@ export function fullAddress(dir) {
   return String(dir ?? "").trim();
 }
 
+/* ---------------- Forma de las fotos en la carta ---------------- */
+
+// La foto se guarda siempre en 4:3. Cada carta la recorta con su forma: esto solo informa al panel
+// cómo se va a ver, para que la vista previa y la guía del editor muestren lo mismo que la carta.
+export const FOTO_FORMAS = {
+  cuadrada: { label: "Cuadrada", ratio: "1 / 1", guide: { w: 0.75, h: 1 }, round: false },
+  redonda: { label: "Redonda", ratio: "1 / 1", guide: { w: 0.75, h: 1 }, round: true },
+  horizontal: { label: "Horizontal (4:3)", ratio: "4 / 3", guide: { w: 1, h: 1 }, round: false },
+  vertical: { label: "Vertical (4:5)", ratio: "4 / 5", guide: { w: 0.6, h: 1 }, round: false },
+};
+export const DEFAULT_FOTO_FORMA = "cuadrada";
+
+export function fotoFormaId(raw) {
+  return Object.hasOwn(FOTO_FORMAS, raw) ? raw : DEFAULT_FOTO_FORMA;
+}
+
+export function fotoForma(raw) {
+  return { id: fotoFormaId(raw), ...FOTO_FORMAS[fotoFormaId(raw)] };
+}
+
 /* ---------------- Versiones (veggie, sin TACC...) ---------------- */
 
 export const MAX_VERSIONS = 6;

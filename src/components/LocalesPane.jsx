@@ -6,6 +6,7 @@ import LocalCard from "./LocalCard";
 import LogoEditor from "./LogoEditor";
 import PhotoEditor from "./dashboard/PhotoEditor";
 import { createLocal, getComidas, saveFicha } from "@/lib/admin-data";
+import { FOTO_FORMAS } from "@/lib/catalogo";
 import { canOpenInBrowser, cloudinaryConfigured, uploadImage, validateImageFile } from "@/lib/cloudinary-client";
 import { cldUrl } from "@/lib/cloudinary-url";
 import { downloadEnvFile } from "@/lib/connection";
@@ -15,7 +16,7 @@ import s from "./panel.module.css";
 
 const message = (err) => (err?.code ? authError(err) : err?.message || "Algo salió mal.");
 const plain = (v) => String(v || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-const FICHA_KEYS = ["nombre", "ciudad", "rubro", "url", "visible", "logo", "portada"];
+const FICHA_KEYS = ["nombre", "ciudad", "rubro", "url", "visible", "logo", "portada", "fotoForma"];
 
 function initials(nombre) {
   const words = String(nombre || "").trim().split(/\s+/).filter(Boolean);
@@ -274,6 +275,17 @@ function LocalRow({ local, open, hidden, onToggle, onSaved }) {
             <label className="field">Ciudad<input className="input" value={f.ciudad} maxLength={80} onChange={(e) => setF({ ...f, ciudad: e.target.value })} /></label>
             <label className="field">Rubro<input className="input" value={f.rubro} maxLength={60} onChange={(e) => setF({ ...f, rubro: e.target.value })} /></label>
           </div>
+          <label className="field">
+            Forma de las fotos en la carta
+            <select className="input" value={f.fotoForma} onChange={(e) => setF({ ...f, fotoForma: e.target.value })}>
+              {Object.entries(FOTO_FORMAS).map(([id, forma]) => (
+                <option key={id} value={id}>
+                  {forma.label}
+                </option>
+              ))}
+            </select>
+            <span className="hint">Tiene que coincidir con el diseño de la carta. El panel la usa en la vista previa y en el editor de fotos.</span>
+          </label>
           <label className="field">URL del sitio<input className="input" type="url" value={f.url} placeholder="https://..." onChange={(e) => setF({ ...f, url: e.target.value })} /></label>
           <label className={s.inlineCheck}><input type="checkbox" checked={f.visible} disabled={!/^https:\/\//i.test(f.url)} onChange={(e) => setF({ ...f, visible: e.target.checked })} /> Mostrar en locales adheridos</label>
           {state && state !== "saving" ? <p className="error-text" role="alert">{state}</p> : null}
@@ -343,7 +355,7 @@ export default function LocalesPane({ locales, onChange }) {
       <ul className={s.localList}>
         {locales.map((l) => (
           <LocalRow
-            key={`${l.slug}-${l.nombre}-${l.url}-${l.visible}-${l.ciudad}-${l.rubro}-${l.logo}-${l.portada}`}
+            key={`${l.slug}-${l.nombre}-${l.url}-${l.visible}-${l.ciudad}-${l.rubro}-${l.logo}-${l.portada}-${l.fotoForma}`}
             local={l}
             hidden={!matches(l)}
             open={openSlug === l.slug}

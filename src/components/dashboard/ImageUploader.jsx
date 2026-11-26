@@ -4,10 +4,14 @@ import { ImagePlus, Link2, Pencil, Trash2 } from "lucide-react";
 import ProductImage from "@/components/menu/ProductImage";
 import { discardImage } from "@/lib/admin-data";
 import { IMAGE_ACCEPT, MAX_BYTES, canOpenInBrowser, cloudinaryConfigured, directImageUrl, uploadImage, validateImageFile, verifyImage } from "@/lib/cloudinary-client";
+import { fotoForma } from "@/lib/catalogo";
+import { useDashboard } from "./DashboardShell";
 import PhotoEditor from "./PhotoEditor";
 import s from "./dashboard.module.css";
 
 export default function ImageUploader({ value, onChange, local, product }) {
+  const { ficha } = useDashboard() || {};
+  const forma = fotoForma(ficha?.fotoForma);
   const input = useRef(null);
   const [source, setSource] = useState(null);
   const [progress, setProgress] = useState(null);
@@ -102,7 +106,16 @@ export default function ImageUploader({ value, onChange, local, product }) {
         }}
       >
         {value ? (
-          <ProductImage src={value} alt="Foto actual" width={640} ratio="4 / 3" className={s.dropImg} />
+          <div className={s.dropFrame}>
+            <ProductImage src={value} alt="Foto actual" width={640} ratio="4 / 3" className={s.dropImg} />
+            {forma.guide.w < 1 ? (
+              <span
+                className={s.frameGuide}
+                style={{ left: `${((1 - forma.guide.w) / 2) * 100}%`, right: `${((1 - forma.guide.w) / 2) * 100}%`, borderRadius: forma.round ? "50%" : undefined, border: forma.round ? "1px dashed rgba(253, 246, 240, 0.75)" : undefined }}
+                aria-hidden
+              />
+            ) : null}
+          </div>
         ) : canUpload ? (
           <button type="button" className={s.dropEmpty} onClick={() => input.current?.click()} disabled={uploading}>
             <ImagePlus size={32} aria-hidden />
@@ -173,7 +186,7 @@ export default function ImageUploader({ value, onChange, local, product }) {
         </p>
       ) : null}
 
-      {source ? <PhotoEditor source={source} product={product} onCancel={closeEditor} onDone={upload} /> : null}
+      {source ? <PhotoEditor source={source} product={product} forma={forma.id} onCancel={closeEditor} onDone={upload} /> : null}
     </div>
   );
 }
