@@ -5,7 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import Loading from "@/components/Loading";
 import { deleteComida, getComida, getComidas, saveComida } from "@/lib/admin-data";
 import { authError } from "@/lib/session";
-import { CATEGORIES, MAX_BASE_MEATS, MAX_CATEGORY_NAME, MAX_MEATS, MAX_PACKS, MAX_PACK_QTY, MEAT_PRICE_KEYS, MIN_MEATS, cleanIngredients, cleanPacks, customCategories, hasIngredients, ingredientsText, isCommonCategory, meatLabel, packKey, productPacks, slugText, usesMeats } from "@/lib/catalogo";
+import { CATEGORIES, DEFAULT_VERSION_BASE, MAX_BASE_MEATS, MAX_CATEGORY_NAME, MAX_MEATS, MAX_PACKS, MAX_PACK_QTY, MAX_VERSIONS, MAX_VERSION_NAME, MEAT_PRICE_KEYS, MIN_MEATS, cleanIngredients, cleanPacks, cleanVersions, customCategories, hasIngredients, ingredientsText, isCommonCategory, meatLabel, packKey, productPacks, slugText, usesMeats } from "@/lib/catalogo";
 import { useDashboard } from "./DashboardShell";
 import ImageUploader from "./ImageUploader";
 import IngredientPicker from "./IngredientPicker";
@@ -14,6 +14,7 @@ import s from "./dashboard.module.css";
 
 const NEW_CATEGORY = "__nueva__";
 const DEFAULT_PACKS = [1, 6, 12].map((n) => ({ cantidad: String(n), precio: "" }));
+const DEFAULT_VERSIONS = [{ nombre: "", precio: "" }];
 
 const EMPTY = {
   nombre: "",
@@ -72,6 +73,9 @@ function ComidaEditor({ id, onFinished }) {
   const [writingCategory, setWritingCategory] = useState(false);
   const [sellByPack, setSellByPack] = useState(false);
   const [packRows, setPackRows] = useState(DEFAULT_PACKS);
+  const [hasVersions, setHasVersions] = useState(false);
+  const [versionBase, setVersionBase] = useState("");
+  const [versionRows, setVersionRows] = useState(DEFAULT_VERSIONS);
 
   // Los ingredientes y las categorías de otros productos del local se pueden volver a elegir.
   useEffect(() => {
@@ -102,6 +106,12 @@ function ComidaEditor({ id, onFinished }) {
         setForm({ ...EMPTY, ...c, medallones: Number(c.medallones) || (c.categoria === "hamburguesas" ? 1 : 0), valor: String(c.valor ?? ""), valorOferta: c.valorOferta ? String(c.valorOferta) : "", precios: { doble: String(c.precios?.doble ?? ""), triple: String(c.precios?.triple ?? ""), cuadruple: String(c.precios?.cuadruple ?? "") }, descripcion: c.descripcion || "", ingredientes: cleanIngredients(c.ingredientes) });
         setDescMode(hasIngredients(c.ingredientes) || !c.descripcion ? "ingredientes" : "manual");
         setOriginal(c.imagen || "");
+        const versions = cleanVersions(c.distinciones);
+        if (versions.length) {
+          setHasVersions(true);
+          setVersionBase(c.distincionBase || "");
+          setVersionRows(versions.map((v) => ({ nombre: v.nombre, precio: String(v.precio) })));
+        }
         const packs = productPacks(c);
         if (packs.length) {
           setSellByPack(true);
@@ -144,6 +154,15 @@ function ComidaEditor({ id, onFinished }) {
     setPackRows((rows) => rows.map((r, n) => (n === i ? { ...r, [k]: value } : r)));
   };
 
+  // Una fila vacía se ignora. Una a medio completar frena el guardado.
+  const versionEntries = hasVersions && !sellByPack ? versionRows.filter((r) => r.nombre.trim() || r.precio) : [];
+  const versionsIncomplete = versionEntries.some((r) => !r.nombre.trim() || !(Number(r.precio) > 0));
+  const versiones = versionsIncomplete ? [] : cleanVersions(versionEntries.map((r) => ({ nombre: r.nombre, precio: Number(r.precio) })));
+  const setVersionRow = (i, k) => (e) => {
+    const value = k === "precio" ? e.target.value.replace(/\D/g, "").slice(0, 9) : e.target.value.slice(0, MAX_VERSION_NAME);
+    setVersionRows((rows) => rows.map((r, n) => (n === i ? { ...r, [k]: value } : r)));
+  };
+
   const offerInvalid = !sellByPack && form.oferta && !(Number(form.valorOferta) > 0 && Number(form.valorOferta) < Number(form.valor));
 
   // Sin píldoras elegidas se conserva el texto que ya tenía, para no borrar una descripción al cambiar de modo.
@@ -164,6 +183,8 @@ function ComidaEditor({ id, onFinished }) {
       if (packsRepeated) return setError("Hay una cantidad repetida.");
       if (!packEntries.length) return setError("Poné el precio de al menos una cantidad.");
     } else if (!(Number(form.valor) > 0)) return setError("Poné un precio mayor a 0.");
+    if (versionsIncomplete) return setError("Cada versión necesita nombre y precio.");
+    if (versionEntries.length && versiones.length !== versionEntries.length) return setError("Hay una versión repetida.");
     if (offerInvalid) return setError("El precio de oferta tiene que ser menor al precio normal.");
     if (finalDescripcion.length > 600) return setError("Los ingredientes superan los 600 caracteres. Quitá alguno.");
     setSaving(true);
@@ -174,7 +195,7 @@ function ComidaEditor({ id, onFinished }) {
       await saveComida(
         local,
         id,
-        { ...form, categoria, presentaciones: sellByPack ? presentaciones : null, oferta: sellByPack ? false : form.oferta, medallones: sellByPack ? 0 : meatsValue, descripcion: finalDescripcion, ingredientes: usesIngredients ? form.ingredientes : null },
+        { ...form, categoria, presentaciones: sellByPack ? presentaciones : null, oferta: sellByPack ? false : form.oferta, medallones: sellByPack ? 0 : meatsValue, descripcion: finalDescripcion, ingredientes: usesIngredients ? form.ingredientes : null, distinciones: versiones, distincionBase: versionBase },
         original
       );
       onFinished();
@@ -385,6 +406,47 @@ function ComidaEditor({ id, onFinished }) {
                 />
                 {offerInvalid ? <span className="error-text">Tiene que ser menor al precio normal.</span> : null}
               </label>
+            ) : null}
+          </div>
+
+          <div className={s.toggleBox}>
+            <label className={s.check}>
+              <input type="checkbox" checked={hasVersions} onChange={(e) => setHasVersions(e.target.checked)} />
+              <span>Tiene distinciones con otro precio (veggie, sin TACC...)</span>
+            </label>
+            {hasVersions ? (
+              <div className={s.stack}>
+                <label className="field">
+                  <span>Nombre de la versión del precio de arriba</span>
+                  <input className="input" value={versionBase} onChange={(e) => setVersionBase(e.target.value.slice(0, MAX_VERSION_NAME))} placeholder={DEFAULT_VERSION_BASE} />
+                </label>
+                {versionRows.map((row, i) => (
+                  <div key={i} className={s.packRow}>
+                    <label className="field">
+                      <span>Versión</span>
+                      <input className="input" value={row.nombre} onChange={setVersionRow(i, "nombre")} placeholder="Veggie" />
+                    </label>
+                    <label className="field">
+                      <span>Precio ($)</span>
+                      <input className="input" inputMode="numeric" value={row.precio} onChange={setVersionRow(i, "precio")} placeholder="0" />
+                    </label>
+                    <button
+                      type="button"
+                      className={s.iconAction}
+                      onClick={() => setVersionRows((rows) => rows.filter((_, n) => n !== i))}
+                      aria-label={`Quitar versión ${row.nombre || i + 1}`}
+                    >
+                      <Trash2 size={18} aria-hidden />
+                    </button>
+                  </div>
+                ))}
+                {versionRows.length < MAX_VERSIONS ? (
+                  <button type="button" className="btn btn-ghost" onClick={() => setVersionRows((rows) => [...rows, { nombre: "", precio: "" }])}>
+                    <Plus size={18} aria-hidden /> Agregar versión
+                  </button>
+                ) : null}
+                <p className="hint">Cada precio es el de esa versión con la carne base. Las carnes extra suman lo mismo que en la versión de arriba.</p>
+              </div>
             ) : null}
           </div>
             </>

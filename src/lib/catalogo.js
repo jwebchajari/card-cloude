@@ -179,6 +179,51 @@ export function fullAddress(dir) {
   return String(dir ?? "").trim();
 }
 
+/* ---------------- Versiones (veggie, sin TACC...) ---------------- */
+
+export const MAX_VERSIONS = 6;
+export const MAX_VERSION_NAME = 40;
+export const DEFAULT_VERSION_BASE = "Original";
+
+function versionName(raw) {
+  return String(raw ?? "").trim().replace(/\s+/g, " ").slice(0, MAX_VERSION_NAME);
+}
+
+/** Deja solo versiones válidas, sin nombres repetidos: [{ nombre: "Veggie", precio: 17000 }]. */
+export function cleanVersions(raw) {
+  const list = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.values(raw) : [];
+  const seen = new Set();
+  const out = [];
+  for (const v of list) {
+    const nombre = versionName(v?.nombre);
+    const precio = Math.round(Number(v?.precio));
+    const key = nombre.toLowerCase();
+    if (!nombre || !(precio > 0 && precio <= 100000000) || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ nombre, precio });
+    if (out.length === MAX_VERSIONS) break;
+  }
+  return out;
+}
+
+/** Nombre de la versión del precio base. Sin versiones no se muestra. */
+export function versionBaseName(product) {
+  return versionName(product?.distincionBase) || DEFAULT_VERSION_BASE;
+}
+
+/** Todas las opciones, con la base primero: [{ key: "base", nombre, precio }, { key: "v0", ... }]. */
+export function productVersions(product) {
+  const extra = cleanVersions(product?.distinciones);
+  if (!extra.length || productPacks(product).length) return [];
+  return [{ key: "base", nombre: versionBaseName(product), precio: Number(product.valor) || 0 }, ...extra.map((v, i) => ({ key: `v${i}`, ...v }))];
+}
+
+/** La versión elegida. Si ya no existe, la base. */
+export function resolveVersion(product, key) {
+  const list = productVersions(product);
+  return list.find((v) => v.key === key) || list[0] || null;
+}
+
 /* ---------------- Venta por cantidad ---------------- */
 
 export const MAX_PACKS = 8;

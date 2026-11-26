@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, getAuth, inMemoryPersistence, sendPassw
 import { get, push, ref, remove, runTransaction, set, update } from "firebase/database";
 import { firebaseConfig, getAuthClient, getDb } from "./firebase";
 import { idToken } from "./session";
-import { INGREDIENT_GROUPS, MAX_BASE_MEATS, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, hasIngredients, ingredientsText, productPacks, cleanOptions } from "./catalogo";
+import { DEFAULT_VERSION_BASE, INGREDIENT_GROUPS, MAX_BASE_MEATS, MAX_VERSION_NAME, MEAT_PRICE_KEYS, MIN_MEATS, categoryOf, cleanIngredients, cleanPacks, cleanVersions, hasIngredients, ingredientsText, productPacks, cleanOptions } from "./catalogo";
 import { SLUG_RE, slugError } from "./slug";
 import { MAX_FRANJAS, WEEK_ORDER, isHHMM } from "@/utils/horarios";
 
@@ -46,6 +46,12 @@ export function cleanComida(raw) {
       if (Number(n) > out.medallones && v > 0) precios[k] = v;
     }
     if (Object.keys(precios).length) out.precios = precios;
+  }
+  // Versiones con otro precio (veggie, sin TACC...). No se combinan con la venta por cantidad.
+  const versiones = packs.length ? [] : cleanVersions(raw.distinciones);
+  if (versiones.length) {
+    out.distinciones = versiones;
+    out.distincionBase = txt(raw.distincionBase, MAX_VERSION_NAME) || DEFAULT_VERSION_BASE;
   }
   if (hasIngredients(raw.ingredientes)) {
     const clean = cleanIngredients(raw.ingredientes);

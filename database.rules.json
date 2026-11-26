@@ -94,6 +94,23 @@
                 ".validate": "$cantidad.matches(/^x[1-9][0-9]{0,2}$/) && newData.isNumber() && newData.val() > 0 && newData.val() <= 100000000"
               }
             },
+            "distincionBase": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+            },
+            "distinciones": {
+              "$v": {
+                ".validate": "$v.matches(/^[0-5]$/) && newData.hasChildren(['nombre', 'precio'])",
+                "nombre": {
+                  ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+                },
+                "precio": {
+                  ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 100000000"
+                },
+                "$otro": {
+                  ".validate": false
+                }
+              }
+            },
             "ingredientes": {
               "$grupo": {
                 ".validate": "$grupo.matches(/^(pan|carne|aderezos)$/)",
