@@ -17,6 +17,10 @@ import s from "../../pages.module.css";
 
 const MAX_PRODUCTS = 12;
 
+// La ficha espera sus datos antes de mostrarse, así el HTML llega completo y sin partes ocultas
+// para buscadores y asistentes de IA que no ejecutan JavaScript. El 404 lo decide src/proxy.js.
+export const instant = false;
+
 export async function generateStaticParams() {
   const locales = await getVisibles();
   return locales.length ? locales.map((l) => ({ slug: l.slug })) : [{ slug: "sin-locales" }];

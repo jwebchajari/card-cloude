@@ -22,3 +22,6 @@ export const CONTACT = {
 
 // Fecha de la última revisión del contenido fijo (inicio y soluciones). Actualizarla al cambiar esos textos.
 export const CONTENT_UPDATED = "2026-11-28";
+
+// Perfiles oficiales de CardCloude (Instagram, Facebook, LinkedIn...). Solo URLs reales: se publican en el schema.
+export const SAME_AS = [];

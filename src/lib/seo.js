@@ -1,7 +1,9 @@
-import { categoryLabel, waNumber } from "./catalogo";
+import { categoryLabel, facebookUrl, instagramUrl, productPacks, unitPrice, waNumber } from "./catalogo";
+import { groupByCategory } from "./menu-shared";
 import { cldUrl } from "./cloudinary-url";
 import { VIDEO } from "./home-media";
-import { CONTACT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./site";
+import { CONTACT, SAME_AS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./site";
+import { SOLUCIONES } from "./soluciones";
 import { openingHoursSpec } from "@/utils/horarios";
 
 export const SEO_TITLE = "Menú digital y catálogo con pedidos por WhatsApp";
@@ -54,7 +56,22 @@ export function homeJsonLd(locales) {
       url: SITE_URL,
       logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png`, width: 512, height: 512 },
       description: SITE_DESCRIPTION,
+      areaServed: { "@type": "Country", name: "Argentina" },
+      knowsAbout: SOLUCIONES.map((x) => x.label),
+      ...(SAME_AS.length ? { sameAs: SAME_AS } : {}),
       ...(CONTACT.email ? { email: CONTACT.email } : {}),
+      ...(CONTACT.whatsapp || CONTACT.email
+        ? {
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "sales",
+              availableLanguage: "es",
+              areaServed: "AR",
+              ...(CONTACT.whatsapp ? { telephone: `+${CONTACT.whatsapp}`, url: CONTACT.whatsappUrl } : {}),
+              ...(CONTACT.email ? { email: CONTACT.email } : {}),
+            },
+          }
+        : {}),
     },
     { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: SITE_NAME, url: SITE_URL, inLanguage: "es-AR", publisher: { "@id": ORG_ID } },
     {
@@ -140,7 +157,88 @@ function businessType(rubro) {
   if (/cafe/.test(r)) return "CafeOrCoffeeShop";
   if (/helad/.test(r)) return "IceCreamShop";
   if (/panad/.test(r)) return "Bakery";
+  if (/churr|confit|comida|delivery/.test(r)) return "FoodEstablishment";
   return "LocalBusiness";
+}
+
+const FOOD_TYPES = ["Restaurant", "BarOrPub", "CafeOrCoffeeShop", "IceCreamShop", "Bakery", "FoodEstablishment"];
+
+// servesCuisine espera un tipo de comida, no el rubro del local.
+const CUISINES = [
+  [/hambur/, "Hamburguesas"],
+  [/pizz/, "Pizza"],
+  [/empan/, "Empanadas"],
+  [/sushi/, "Sushi"],
+  [/parrill/, "Parrilla"],
+  [/sandw/, "Sándwiches"],
+  [/churr/, "Churros"],
+  [/helad/, "Helados"],
+  [/cafe/, "Café"],
+  [/panad/, "Panadería"],
+];
+
+const plainText = (v) => String(v || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+function cuisineOf(rubro) {
+  const r = plainText(rubro);
+  return CUISINES.find(([re]) => re.test(r))?.[1] || "";
+}
+
+const MAX_MENU_ITEMS = 100;
+
+function offerOf(p) {
+  const packs = productPacks(p);
+  if (packs.length > 1) {
+    const prices = packs.map((x) => x.precio).filter((n) => n > 0);
+    if (!prices.length) return null;
+    return { "@type": "AggregateOffer", priceCurrency: "ARS", lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length };
+  }
+  const price = unitPrice(p);
+  return price > 0 ? { "@type": "Offer", priceCurrency: "ARS", price } : null;
+}
+
+function itemOf(p, type, withOffer = true) {
+  const offers = withOffer ? offerOf(p) : null;
+  return {
+    "@type": type,
+    name: p.nombre,
+    ...(p.descripcion ? { description: p.descripcion } : {}),
+    ...(p.imagen ? { image: cldUrl(p.imagen, "f_jpg,q_auto,c_fill,w_800,h_800") } : {}),
+    ...(offers ? { offers } : {}),
+  };
+}
+
+/** Carta completa: Menu para gastronomía, OfferCatalog para el resto de los comercios. */
+function catalogOf(l, food) {
+  const groups = groupByCategory(l.productos.slice(0, MAX_MENU_ITEMS));
+  if (!groups.length) return null;
+  if (food) {
+    return {
+      "@type": "Menu",
+      name: `Carta de ${l.nombre}`,
+      url: l.url,
+      inLanguage: "es-AR",
+      hasMenuSection: groups.map((g) => ({ "@type": "MenuSection", name: g.label, hasMenuItem: g.items.map((p) => itemOf(p, "MenuItem")) })),
+    };
+  }
+  return {
+    "@type": "OfferCatalog",
+    name: `Productos de ${l.nombre}`,
+    url: l.url,
+    itemListElement: groups.map((g) => ({
+      "@type": "OfferCatalog",
+      name: g.label,
+      itemListElement: g.items.map((p) => ({ ...(offerOf(p) || { "@type": "Offer" }), itemOffered: itemOf(p, "Product", false) })),
+    })),
+  };
+}
+
+/** Saca la ciudad del final de la dirección cuando el dueño la escribió junto a la calle. */
+function streetOf(direccion, city) {
+  const d = String(direccion || "").trim().normalize("NFC");
+  // Se compara letra por letra para que la posición coincida con el texto original.
+  const i = city ? [...d].map(plainText).join("").lastIndexOf(plainText(city.normalize("NFC"))) : -1;
+  return (i > 0 ? d.slice(0, i) : d).replace(/[\s,.-]+$/, "");
 }
 
 export function localJsonLd(l) {
@@ -149,7 +247,10 @@ export function localJsonLd(l) {
   const phone = waNumber(l.datos.whatsapp);
   const image = l.portada || l.logo;
   const hours = openingHoursSpec(l.horarios);
-  const foodType = ["Restaurant", "BarOrPub", "CafeOrCoffeeShop", "IceCreamShop", "Bakery"].includes(type);
+  const food = FOOD_TYPES.includes(type);
+  const [city, region] = l.ciudad.split(",").map((x) => x.trim());
+  const street = streetOf(l.datos.direccion, city);
+  const sameAs = [instagramUrl(l.datos.redes.instagram), facebookUrl(l.datos.redes.facebook)].filter(Boolean);
   const business = {
     "@type": type,
     "@id": `${url}#business`,
@@ -159,18 +260,25 @@ export function localJsonLd(l) {
     description: `${l.nombre}${l.rubro ? `, ${l.rubro.toLowerCase()}` : ""}${l.ciudad ? ` en ${l.ciudad}` : ""}. Carta online con pedidos por WhatsApp.`,
     address: {
       "@type": "PostalAddress",
-      ...(l.datos.direccion ? { streetAddress: l.datos.direccion } : {}),
-      ...(l.ciudad ? { addressLocality: l.ciudad.split(",")[0].trim() } : {}),
+      ...(street ? { streetAddress: street } : {}),
+      ...(city ? { addressLocality: city } : {}),
+      ...(region ? { addressRegion: region } : {}),
       addressCountry: "AR",
     },
   };
+  // El nombre que el dueño cargó en su panel, si difiere del directorio, ayuda a unir ambas fichas.
+  if (l.datos.nombre && plainText(l.datos.nombre) !== plainText(l.nombre)) business.alternateName = l.datos.nombre;
+  if (sameAs.length) business.sameAs = sameAs;
   if (image) business.image = image;
   if (phone.length > 3) business.telephone = `+${phone}`;
   if (hours.length) business.openingHoursSpecification = hours;
-  if (foodType) {
-    business.hasMenu = l.url;
-    if (l.rubro) business.servesCuisine = l.rubro;
+  if (food) {
+    const cuisine = cuisineOf(l.rubro);
+    if (cuisine) business.servesCuisine = cuisine;
   }
+  const catalog = catalogOf(l, food);
+  if (catalog) business[food ? "hasMenu" : "hasOfferCatalog"] = catalog;
+  else if (food) business.hasMenu = l.url;
   const categories = [...new Set(l.productos.map((p) => categoryLabel(p.categoria)))];
   if (categories.length) business.knowsAbout = categories;
   return {
