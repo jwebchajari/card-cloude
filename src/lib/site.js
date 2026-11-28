@@ -19,3 +19,6 @@ export const CONTACT = {
   whatsapp,
   whatsappUrl: whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent("Hola, quiero sumar mi local a CardCloude.")}` : "",
 };
+
+// Fecha de la última revisión del contenido fijo (inicio y soluciones). Actualizarla al cambiar esos textos.
+export const CONTENT_UPDATED = "2026-11-28";

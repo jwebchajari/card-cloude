@@ -152,7 +152,7 @@ export default async function Home() {
           </div>
           {locales.length ? (
             <ul className={s.locales}>
-              {locales.map((l) => <LocalCard key={l.slug} local={l} />)}
+              {locales.map((l) => <LocalCard key={l.slug} local={l} internal />)}
             </ul>
           ) : (
             <p className="hint">Pronto vas a ver acá los locales que ya usan CardCloude.</p>
